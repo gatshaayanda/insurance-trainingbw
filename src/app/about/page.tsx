@@ -70,7 +70,7 @@ export default function AboutPage() {
 
           {/* Endorsements */}
           <div>
-            <h2 className="text-2xl font-semibold mb-2">✅ Endorsed & Trusted</h2>
+            <h2 className="text-2xl font-semibold mb-2">✅ Endorsed & Trusted!</h2>
             <p className="text-[#4F5F7A]">
               Our model is endorsed by the <strong>Small Business Association Botswana (SBAB)</strong> and{' '}
               <strong>LEA</strong>. We’re also part of Botswana’s <strong>YDF 2025</strong> program to
