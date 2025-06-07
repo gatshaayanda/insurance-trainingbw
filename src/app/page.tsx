@@ -44,7 +44,7 @@ export default function HomePage() {
       icon: <Code size={36} className="text-[#C5A100]" />,
       title: 'Design & Build',
       body:
-        'Websites & apps as fast as Netflix or WhatsApp. Built with our AI-powered, custom framework!',
+        'Websites & apps as fast as Netflix or Tiktok. Built with our AI-powered, custom framework!',
     },
     {
       icon: <RefreshCcw size={36} className="text-[#C5A100]" />,
