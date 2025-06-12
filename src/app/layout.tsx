@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import { AnalyticsProvider } from '@/components/AnalyticsProvider';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Loader from '@/components/AdminHubLoader';
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body
         className={`min-h-screen flex flex-col ${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-[#bce2ff] to-[#62A3E3]`}
       >
+                <AnalyticsProvider>
         <Loader />
         <div className="sticky top-0 z-50 bg-white/80 backdrop-blur shadow-sm">
           <Header />
@@ -30,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Footer />
         <Analytics />
         <SpeedInsights />
+        </AnalyticsProvider>
       </body>
     </html>
   );

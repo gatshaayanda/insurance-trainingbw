@@ -1,28 +1,22 @@
 /* src/app/globals.css */
 
-/* Keep the Tailwind import exactly as is */
+/* 1. Tailwind base import */
 @import "tailwindcss";
 
-/* Geist Font CSS vars are injected via next/font */
-/* ————————————————————————————————————— */
-/*  Brand / Color Variables              */
-/* ————————————————————————————————————— */
+/* 2. CSS variables for theming */
 :root {
   --background: #ffffff;
   --foreground: #1f2937;
-
   --background-dark: #0a0a0a;
   --foreground-dark: #f3f4f6;
-
   --brand-primary: #62A3E3;
   --brand-secondary: #bce2ff;
   --brand-accent: #0E3A62;
-
   --font-sans: var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
 }
 
-/* Dark mode overrides */
+/* Dark mode override */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: var(--background-dark);
@@ -30,7 +24,7 @@
   }
 }
 
-/* Global resets */
+/* 3. Global resets */
 body {
   margin: 0;
   padding: 0;
@@ -42,95 +36,77 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Responsive container */
+/* 4. Responsive container */
 .container {
   max-width: 1280px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  margin: 0 auto;
+  padding: 0 1rem;
 }
-
-/* Optional: add a bit more breathing room on wide screens */
 @media (min-width: 1600px) {
-  .container {
-    padding-left: 2rem;
-    padding-right: 2rem;
-  }
+  .container { padding: 0 2rem; }
 }
-
-/* Optional: tighten margins on very small phones */
 @media (max-width: 360px) {
-  .container {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
+  .container { padding: 0 .5rem; }
 }
 
-/* Links */
-a {
-  color: var(--brand-accent);
-  text-decoration: none;
-}
-a:hover {
-  color: var(--brand-primary);
-  text-decoration: underline;
-}
+/* 5. Typography & links */
+a { color: var(--brand-accent); text-decoration: none; }
+a:hover { color: var(--brand-primary); text-decoration: underline; }
 
-/* Headings */
-h1, h2, h3, h4, h5, h6 {
+h1,h2,h3,h4,h5,h6 {
   font-family: var(--font-sans);
   font-weight: 600;
-  margin-top: 0.5rem;
+  margin-top: .5rem;
   color: var(--brand-accent);
 }
 
-/* Buttons */
+/* 6. Buttons */
 button {
   font-family: var(--font-sans);
   cursor: pointer;
   background: linear-gradient(to bottom right, var(--brand-secondary), var(--brand-primary));
-  color: white;
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: 0.5rem;
-  transition: background 0.3s ease;
-}
-button:hover {
-  background: var(--brand-accent);
   color: #fff;
+  padding: .6rem 1.2rem;
+  border: none;
+  border-radius: .5rem;
+  transition: background .3s ease;
 }
+button:hover { background: var(--brand-accent); }
 
-/* Inputs */
-input,
-textarea,
-select {
+/* 7. Form controls */
+input, textarea, select {
   font-family: var(--font-sans);
   border: 1px solid #ccc;
-  border-radius: 0.375rem;
-  padding: 0.5rem 0.75rem;
+  border-radius: .375rem;
+  padding: .5rem .75rem;
   width: 100%;
   background: var(--background);
   color: var(--foreground);
 }
-input:focus,
-textarea:focus,
-select:focus {
+input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--brand-primary);
-  box-shadow: 0 0 0 2px rgba(98, 163, 227, 0.25);
+  box-shadow: 0 0 0 2px rgba(98,163,227,0.25);
 }
 
-/* Sections */
-section {
-  padding-top: 3rem;
-  padding-bottom: 3rem;
-}
+/* 8. Section spacing */
+section { padding: 3rem 0; }
 
-/* Footer */
+/* 9. Footer */
 footer {
-  background-color: var(--brand-secondary);
+  background: var(--brand-secondary);
   color: #1f2937;
   padding: 2rem 1rem;
   text-align: center;
+}
+
+/* 10. Utility classes for your Dashboard */
+.btn-blue {
+  @apply inline-flex items-center gap-1 bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition;
+}
+.btn-green {
+  @apply inline-flex items-center gap-1 bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 transition;
+}
+.card {
+  @apply bg-white border border-gray-200 rounded-lg p-6 text-center shadow-sm;
 }
