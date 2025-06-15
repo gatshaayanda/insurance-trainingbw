@@ -75,7 +75,7 @@ export default function HomePage() {
       {/* Hero */}
       <section
         {...longPress}
-        className="flex flex-col items-center justify-center text-center px-6 pt-28 pb-16 bg-gradient-to-br from-[#5593ff] to-[#0B2342] text-white"
+        className="flex flex-col items-center justify-center text-center px-6 pt-28 pb-16 bg-gradient-to-br from-[#5593ff] to-[#858585] text-white"
       >
         <h1 className="text-4xl sm:text-5xl font-bold leading-tight max-w-3xl mb-4 drop-shadow-lg">
           {greeting} {emoji}, welcome to AdminHub!
@@ -119,7 +119,7 @@ export default function HomePage() {
         <div className="container mx-auto max-w-xl px-6">
           <h2 className="text-2xl font-bold mb-4">📞 Ready to Start?</h2>
           <p className="text-[#4F5F7A] mb-8">
-            We’re onboarding a few select clients. Want to be next?
+            We’re onboarding a few select clients. Want to be next? Email us your best form of contact.
           </p>
           <Link
             href="mailto:noreplyadhubmvp@gmail.com"
