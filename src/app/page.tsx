@@ -73,6 +73,7 @@ export default function HomePage() {
   return (
     <>
       {/* Hero */}
+      
       <section
         {...longPress}
         className="flex flex-col items-center justify-center text-center px-6 pt-28 pb-16 bg-gradient-to-br from-[#5593ff] to-[#858585] text-white"
@@ -89,6 +90,8 @@ export default function HomePage() {
         >
           🚀 launch our demo below
         </Link>
+
+
       </section>
 
       {/* Services */}
@@ -113,6 +116,22 @@ export default function HomePage() {
           </p>
         </div>
       </section>
+
+      <section className="py-16 bg-[#F9FAFB] text-center">
+  <div className="container mx-auto max-w-xl px-6 space-y-4">
+    <h2 className="text-xl font-bold text-gray-900">Already a Client?</h2>
+    <p className="text-gray-600">
+      Log in to view your project status, updates, and more.
+    </p>
+    <Link
+      href="/client/login"
+      className="inline-block bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700"
+    >
+      🔐 Client Login
+    </Link>
+  </div>
+</section>
+
 
       {/* Contact */}
       <section id="contact" className="py-20 bg-white text-center">

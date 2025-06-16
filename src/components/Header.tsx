@@ -1,4 +1,3 @@
-// src/components/Header.tsx
 'use client';
 
 import Link from 'next/link';
@@ -28,8 +27,8 @@ export default function Header() {
         <nav
           className={`
             ${isOpen ? 'flex' : 'hidden'}
-            flex-col space-y-4
-            md:flex md:flex-row md:space-y-0 md:space-x-6
+            flex-col space-y-4 items-start
+            md:flex md:flex-row md:space-y-0 md:space-x-6 md:items-center
           `}
         >
           {[
@@ -46,11 +45,19 @@ export default function Header() {
             <Link
               key={page}
               href={`/${page.toLowerCase()}`}
-              className="block md:inline-block"
+              className="block md:inline-block text-gray-800 hover:text-[#C5A100] transition"
             >
               {page}
             </Link>
           ))}
+
+          {/* Client Login */}
+          <Link
+            href="/client/login"
+            className="bg-[#b8d8f5] text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-[#174a7d] transition"
+          >
+            Client Login
+          </Link>
         </nav>
       </div>
     </header>
