@@ -1,4 +1,3 @@
-// src/app/portfolio/page.tsx
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -37,6 +36,21 @@ export default function PortfolioPage() {
       title: 'Sports Center Botswana',
       desc: 'Sports news and promotions portal for youth athletics.',
       link: 'https://sports-center-botswana.vercel.app/',
+    },
+    {
+      title: 'Melodi Media',
+      desc: 'Content management and blog tools for a creative media brand.',
+      link: 'https://melodi-media.vercel.app/',
+    },
+    {
+      title: 'IYTRONE Electronics',
+      desc: 'Professional site for a Botswana-based electronics repair brand.',
+      link: 'https://iytrone-electronics.vercel.app/',
+    },
+    {
+      title: 'Mingy Media',
+      desc: 'Chilled social marketing agency with blog, portfolio, and admin backend.',
+      link: 'https://mingy-media.vercel.app/',
     },
   ];
 
