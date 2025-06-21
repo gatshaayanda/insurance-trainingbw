@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, FormEvent } from 'react'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore'
 import { firestore } from '@/utils/firebaseConfig'
 import AdminHubLoader from '@/components/AdminHubLoader'
 
@@ -12,9 +12,9 @@ export default function EditBlogPage() {
   const id = params.id!
 
   const [loading, setLoading] = useState(true)
-  const [title, setTitle]     = useState('')
-  const [body, setBody]       = useState('')
-  const [error, setError]     = useState('')
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (!id) {
@@ -52,14 +52,7 @@ export default function EditBlogPage() {
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this post?')) return
     try {
-      const res = await fetch(`/api/blog/${id}`, {
-        method:      'DELETE',
-        credentials: 'include',
-      })
-      if (!res.ok) {
-        const { error: msg } = await res.json()
-        throw new Error(msg || 'Delete failed')
-      }
+      await deleteDoc(doc(firestore, 'blogs', id))
       router.push('/admin/blog')
     } catch (e: any) {
       setError(e.message)
