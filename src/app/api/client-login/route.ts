@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server'
 
 const CLIENTS: Record<string, string> = {
   'kaygatsha@gmail.com': process.env.CLIENT_PASSWORD_KAYGATSHA_GMAIL_COM!,
-  // Add more emails and env keys here as needed
+   'mingymotsumi@gmail.com': process.env.CLIENT_PASSWORD_MINGYMOTSUMI_GMAIL_COM!,
+    // Add more emails and env keys here as needed
 }
 
 export async function POST(req: Request) {
