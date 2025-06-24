@@ -10,20 +10,14 @@ export default function Header() {
   return (
     <header className="w-full bg-white/90 backdrop-blur-sm shadow-md sticky top-0 z-50">
       <div className="container flex items-center justify-between px-4 py-4">
-        <Link href="/" className="text-2xl font-extrabold text-[#0E3A62]">
+        <Link href="/" className="text-2xl font-extrabold text-[#0F264B]">
           AdminHub
         </Link>
 
-        {/* mobile toggle */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden p-2"
-          aria-label="Toggle menu"
-        >
+        <button onClick={() => setIsOpen(!isOpen)} className="md:hidden p-2" aria-label="Toggle menu">
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
 
-        {/* nav */}
         <nav
           className={`
             ${isOpen ? 'flex' : 'hidden'}
@@ -32,29 +26,24 @@ export default function Header() {
           `}
         >
           {[
-            'Home',
-            'About',
-            'Services',
-            'Portfolio',
-            'Blog',
-            'FAQ',
-            'Contact',
-            'Privacy',
-            'Terms',
-          ].map((page) => (
+            { label: 'Home', href: '/' },
+            { label: 'About', href: '/about' },
+            { label: 'Services', href: '/services' },
+            { label: 'Inside AdminHub', href: '/blog' },
+            { label: 'Contact', href: '/contact' },
+          ].map(({ label, href }) => (
             <Link
-              key={page}
-              href={`/${page.toLowerCase()}`}
-              className="block md:inline-block text-gray-800 hover:text-[#C5A100] transition"
+              key={label}
+              href={href}
+              className="text-[#0F264B] hover:text-[#C9A43E] transition font-medium"
             >
-              {page}
+              {label}
             </Link>
           ))}
 
-          {/* Client Login */}
           <Link
             href="/client/login"
-            className="bg-[#b8d8f5] text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-[#174a7d] transition"
+            className="bg-[#fae9b9] text-[#0F264B] px-4 py-2 rounded-full text-sm font-semibold hover:brightness-110 transition"
           >
             Client Login
           </Link>

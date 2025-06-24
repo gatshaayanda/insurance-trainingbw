@@ -43,6 +43,56 @@ export default function ViewProjectPage() {
   return (
     <div className="max-w-3xl mx-auto p-8 space-y-6">
       <h1 className="text-3xl font-bold">Project Overview</h1>
+
+      {/* 💬 Project Messages */}
+      <div className="mb-12">
+        <h2 className="text-xl font-bold text-[#0F264B] mb-4">💬 Project Messages</h2>
+
+        <div className="space-y-4 max-h-[400px] overflow-y-auto border rounded p-4 bg-gray-50">
+          {/* Example Admin Bubble */}
+          <div className="bg-blue-100 p-3 rounded-lg max-w-md ml-auto shadow">
+            <p className="text-sm text-gray-800">
+              We’ve updated the landing section as discussed.
+            </p>
+            <span className="text-xs text-right block mt-1 text-gray-500">Admin · 12:40 PM</span>
+          </div>
+
+          {/* Example Client Bubble */}
+          <div className="bg-white border p-3 rounded-lg max-w-md shadow">
+            <p className="text-sm text-gray-800">
+              Looks great! Can you also change the button color to match our brand?
+            </p>
+            <span className="text-xs text-right block mt-1 text-gray-500">Client · 12:45 PM</span>
+          </div>
+        </div>
+
+        <form onSubmit={() => {}} className="mt-6 space-y-3">
+          <textarea
+            placeholder="Type your message..."
+            rows={3}
+            className="w-full border p-3 rounded"
+          />
+          <input
+            type="file"
+            accept="image/*,application/pdf"
+            className="block text-sm text-gray-500"
+          />
+          <input
+            type="url"
+            placeholder="Optional link"
+            className="w-full border p-2 rounded text-sm"
+          />
+          <button
+            type="submit"
+            className="bg-[#0F264B] text-white px-5 py-2 rounded hover:brightness-110"
+          >
+            📤 Send Message
+          </button>
+        </form>
+      </div>
+
+        <h2 className="text-xl font-bold text-[#0F264B] mb-4">📋 Preliminary Intake Info</h2>
+
       <div className="space-y-3 text-sm">
         <Read label="Client Name" value={project.client_name} />
         <Read label="Client Email" value={project.client_email} />

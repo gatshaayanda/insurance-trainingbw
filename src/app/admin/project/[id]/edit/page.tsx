@@ -35,7 +35,7 @@ export default function EditProjectPage() {
 
   useEffect(() => {
     if (!id) {
-      router.replace('/admin/projects')
+      router.replace('/admin/project')
       return
     }
 
@@ -79,7 +79,7 @@ export default function EditProjectPage() {
     e.preventDefault()
     try {
       await updateDoc(doc(firestore, 'projects', id), { ...form })
-      router.push('/admin/projects')
+      router.push('/admin/project')
     } catch (e: any) {
       setError(e.message)
     }
