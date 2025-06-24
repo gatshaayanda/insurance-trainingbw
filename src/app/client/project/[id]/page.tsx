@@ -1,9 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { doc, getDoc } from 'firebase/firestore'
-import { firestore } from '@/utils/firebaseConfig'
+import {
+  doc,
+  getDoc,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp,
+} from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { firestore, storage } from '@/utils/firebaseConfig'
 import AdminHubLoader from '@/components/AdminHubLoader'
 
 interface Project {
@@ -25,26 +35,38 @@ interface Project {
   live_revisable_draft_link?: string
 }
 
+interface Message {
+  id: string // ✅ Add this to resolve TS error
+  text: string
+  sender: string
+  link?: string
+  fileUrl?: string
+  timestamp: any
+}
+
 export default function ClientProjectDetails() {
   const { id } = useParams()
   const router = useRouter()
   const [project, setProject] = useState<Project | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState('')
+  const [optionalLink, setOptionalLink] = useState('')
+  const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const email = (() => {
+    try {
+      return decodeURIComponent(
+        document.cookie.split('; ').find(row => row.startsWith('role='))?.split('=')[1] || ''
+      )
+    } catch {
+      return ''
+    }
+  })()
 
   useEffect(() => {
-    const email = (() => {
-      try {
-        return decodeURIComponent(
-          document.cookie
-            .split('; ')
-            .find(row => row.startsWith('role='))?.split('=')[1] || ''
-        )
-      } catch {
-        return ''
-      }
-    })()
-
     if (!email || !email.includes('@')) {
       router.replace('/client/login')
       return
@@ -54,28 +76,58 @@ export default function ClientProjectDetails() {
       try {
         const ref = doc(firestore, 'projects', id as string)
         const snap = await getDoc(ref)
-
-        if (!snap.exists()) {
-          setError('Project not found.')
-          return
-        }
-
+        if (!snap.exists()) throw new Error('Project not found.')
         const data = snap.data()
-        if (data.client_email !== email) {
-          setError('Unauthorized to view this project.')
-          return
-        }
-
+        if (data.client_email !== email) throw new Error('Unauthorized to view this project.')
         setProject({ id: snap.id, ...data } as Project)
-      } catch (err) {
-        setError('Error loading project')
+      } catch (err: any) {
+        setError(err.message)
       } finally {
         setLoading(false)
       }
     }
 
     fetchProject()
-  }, [id, router])
+  }, [id, router, email])
+
+  useEffect(() => {
+    if (!id) return
+    const q = query(
+      collection(firestore, 'projects', id as string, 'messages'),
+      orderBy('timestamp', 'asc')
+    )
+    const unsub = onSnapshot(q, snap => {
+      setMessages(
+        snap.docs.map(doc => ({ ...(doc.data() as Omit<Message, 'id'>), id: doc.id }))
+      )
+      setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+    })
+
+    return () => unsub()
+  }, [id])
+
+  async function handleSendMessage(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newMessage.trim() && !file && !optionalLink.trim()) return
+    const msg: any = {
+      text: newMessage.trim(),
+      sender: project?.client_name || 'Client',
+      link: optionalLink.trim(),
+      timestamp: serverTimestamp(),
+    }
+
+    if (file) {
+      const storageRef = ref(storage, `messages/${id}/${Date.now()}_${file.name}`)
+      const snapshot = await uploadBytes(storageRef, file)
+      const url = await getDownloadURL(snapshot.ref)
+      msg.fileUrl = url
+    }
+
+    await addDoc(collection(firestore, 'projects', id as string, 'messages'), msg)
+    setNewMessage('')
+    setOptionalLink('')
+    setFile(null)
+  }
 
   if (loading) return <AdminHubLoader />
   if (error) return <p className="text-center text-red-500 mt-10">{error}</p>
@@ -83,28 +135,49 @@ export default function ClientProjectDetails() {
 
   return (
     <div className="max-w-4xl mx-auto mt-10 px-4 font-inter">
-
-      {/* 💬 Messaging Section */}
       <div className="mb-12">
         <h2 className="text-xl font-bold text-[#0F264B] mb-4">💬 Project Messages</h2>
-
         <div className="space-y-4 max-h-[400px] overflow-y-auto border rounded p-4 bg-gray-50">
-          <div className="bg-blue-100 p-3 rounded-lg max-w-md ml-auto shadow">
-            <p className="text-sm text-gray-800">
-              We’ve updated the landing section as discussed.
-            </p>
-            <span className="text-xs text-right block mt-1 text-gray-500">Admin · 12:40 PM</span>
-          </div>
-          <div className="bg-white border p-3 rounded-lg max-w-md shadow">
-            <p className="text-sm text-gray-800">
-              Looks great! Can you also change the button color to match our brand?
-            </p>
-            <span className="text-xs text-right block mt-1 text-gray-500">You · 12:45 PM</span>
-          </div>
+          {messages.map((m, i) => (
+            <div
+              key={m.id}
+              className={`p-3 rounded-lg max-w-md shadow ${
+                m.sender === project.client_name ? 'bg-white border' : 'bg-blue-100 ml-auto'
+              }`}
+            >
+              <p className="text-sm text-gray-800 whitespace-pre-line">{m.text}</p>
+              {m.link && (
+                <a
+                  href={m.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline text-xs block mt-1"
+                >
+                  🔗 View Reference
+                </a>
+              )}
+              {m.fileUrl && (
+                <a
+                  href={m.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline text-xs block mt-1"
+                >
+                  📎 View Uploaded File
+                </a>
+              )}
+              <span className="text-xs text-right block mt-1 text-gray-500">
+                {m.sender}
+              </span>
+            </div>
+          ))}
+          <div ref={scrollRef} />
         </div>
 
-        <form onSubmit={() => {}} className="mt-6 space-y-3">
+        <form onSubmit={handleSendMessage} className="mt-6 space-y-3">
           <textarea
+            value={newMessage}
+            onChange={e => setNewMessage(e.target.value)}
             placeholder="Type your message..."
             rows={3}
             className="w-full border p-3 rounded"
@@ -112,10 +185,13 @@ export default function ClientProjectDetails() {
           <input
             type="file"
             accept="image/*,application/pdf"
+            onChange={e => setFile(e.target.files?.[0] || null)}
             className="block text-sm text-gray-500"
           />
           <input
             type="url"
+            value={optionalLink}
+            onChange={e => setOptionalLink(e.target.value)}
             placeholder="Optional link"
             className="w-full border p-2 rounded text-sm"
           />
@@ -128,9 +204,8 @@ export default function ClientProjectDetails() {
         </form>
       </div>
 
-<h2 className="text-xl font-bold text-[#0F264B] mb-4">📋 Preliminary Intake Info</h2>
-
-      {/* Project Info Block */}
+      {/* Intake Info */}
+      <h2 className="text-xl font-bold text-[#0F264B] mb-4">📋 Preliminary Intake Info</h2>
       <div className="border p-6 rounded-2xl shadow-xl bg-white space-y-4">
         <ReadLine label="Business" value={project.business} />
         <ReadLine label="Industry" value={project.industry} />

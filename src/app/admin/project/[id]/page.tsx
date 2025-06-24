@@ -1,47 +1,100 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { doc, getDoc } from 'firebase/firestore'
-import { firestore } from '@/utils/firebaseConfig'
+import {
+  doc,
+  getDoc,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp,
+} from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { firestore, storage } from '@/utils/firebaseConfig'
 import AdminHubLoader from '@/components/AdminHubLoader'
+
+interface Message {
+  text: string
+  sender: string
+  link?: string
+  fileUrl?: string
+  timestamp: any
+}
 
 export default function ViewProjectPage() {
   const router = useRouter()
-  const { id } = useParams() as { id?: string }
+  const { id } = useParams() as { id: string }
 
+  const [project, setProject] = useState<any>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState('')
+  const [optionalLink, setOptionalLink] = useState('')
+  const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [project, setProject] = useState<any>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!id || typeof id !== 'string') {
-      setError('Invalid project ID.')
-      setLoading(false)
-      return
-    }
-
-    ;(async () => {
+    const fetchProject = async () => {
       try {
         const snap = await getDoc(doc(firestore, 'projects', id))
-        if (!snap.exists()) {
-          throw new Error('Project not found.')
-        }
+        if (!snap.exists()) throw new Error('Project not found.')
         setProject(snap.data())
       } catch (e: any) {
         setError(e.message)
       } finally {
         setLoading(false)
       }
-    })()
+    }
+
+    fetchProject()
   }, [id])
+
+  useEffect(() => {
+    const q = query(
+      collection(firestore, 'projects', id, 'messages'),
+      orderBy('timestamp', 'asc')
+    )
+    const unsub = onSnapshot(q, snap => {
+      setMessages(snap.docs.map(doc => doc.data() as Message))
+      setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+    })
+
+    return () => unsub()
+  }, [id])
+
+  async function handleSendMessage(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newMessage.trim() && !file && !optionalLink.trim()) return
+
+    const msg: any = {
+      text: newMessage.trim(),
+      sender: 'The Admin Hub Team',
+      link: optionalLink.trim(),
+      timestamp: serverTimestamp(),
+    }
+
+    if (file) {
+      const storageRef = ref(storage, `messages/${id}/${Date.now()}_${file.name}`)
+      const snapshot = await uploadBytes(storageRef, file)
+      msg.fileUrl = await getDownloadURL(snapshot.ref)
+    }
+
+    await addDoc(collection(firestore, 'projects', id, 'messages'), msg)
+    setNewMessage('')
+    setOptionalLink('')
+    setFile(null)
+  }
 
   if (loading) return <AdminHubLoader />
   if (error) return <p className="text-center text-red-500 mt-10">{error}</p>
   if (!project) return null
 
   return (
-    <div className="max-w-3xl mx-auto p-8 space-y-6">
+    <div className="max-w-3xl mx-auto p-8 space-y-6 font-inter">
       <h1 className="text-3xl font-bold">Project Overview</h1>
 
       {/* 💬 Project Messages */}
@@ -49,25 +102,44 @@ export default function ViewProjectPage() {
         <h2 className="text-xl font-bold text-[#0F264B] mb-4">💬 Project Messages</h2>
 
         <div className="space-y-4 max-h-[400px] overflow-y-auto border rounded p-4 bg-gray-50">
-          {/* Example Admin Bubble */}
-          <div className="bg-blue-100 p-3 rounded-lg max-w-md ml-auto shadow">
-            <p className="text-sm text-gray-800">
-              We’ve updated the landing section as discussed.
-            </p>
-            <span className="text-xs text-right block mt-1 text-gray-500">Admin · 12:40 PM</span>
-          </div>
-
-          {/* Example Client Bubble */}
-          <div className="bg-white border p-3 rounded-lg max-w-md shadow">
-            <p className="text-sm text-gray-800">
-              Looks great! Can you also change the button color to match our brand?
-            </p>
-            <span className="text-xs text-right block mt-1 text-gray-500">Client · 12:45 PM</span>
-          </div>
+          {messages.map((m, i) => (
+            <div
+              key={i}
+              className={`p-3 rounded-lg max-w-md shadow ${
+                m.sender === 'The Admin Hub Team' ? 'bg-blue-100 ml-auto' : 'bg-white border'
+              }`}
+            >
+              <p className="text-sm text-gray-800 whitespace-pre-line">{m.text}</p>
+              {m.link && (
+                <a
+                  href={m.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline text-xs block mt-1"
+                >
+                  🔗 View Reference
+                </a>
+              )}
+              {m.fileUrl && (
+                <a
+                  href={m.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline text-xs block mt-1"
+                >
+                  📎 View Uploaded File
+                </a>
+              )}
+              <span className="text-xs text-right block mt-1 text-gray-500">{m.sender}</span>
+            </div>
+          ))}
+          <div ref={scrollRef} />
         </div>
 
-        <form onSubmit={() => {}} className="mt-6 space-y-3">
+        <form onSubmit={handleSendMessage} className="mt-6 space-y-3">
           <textarea
+            value={newMessage}
+            onChange={e => setNewMessage(e.target.value)}
             placeholder="Type your message..."
             rows={3}
             className="w-full border p-3 rounded"
@@ -75,10 +147,13 @@ export default function ViewProjectPage() {
           <input
             type="file"
             accept="image/*,application/pdf"
+            onChange={e => setFile(e.target.files?.[0] || null)}
             className="block text-sm text-gray-500"
           />
           <input
             type="url"
+            value={optionalLink}
+            onChange={e => setOptionalLink(e.target.value)}
             placeholder="Optional link"
             className="w-full border p-2 rounded text-sm"
           />
@@ -91,8 +166,8 @@ export default function ViewProjectPage() {
         </form>
       </div>
 
-        <h2 className="text-xl font-bold text-[#0F264B] mb-4">📋 Preliminary Intake Info</h2>
-
+      {/* Intake Info */}
+      <h2 className="text-xl font-bold text-[#0F264B] mb-4">📋 Preliminary Intake Info</h2>
       <div className="space-y-3 text-sm">
         <Read label="Client Name" value={project.client_name} />
         <Read label="Client Email" value={project.client_email} />
