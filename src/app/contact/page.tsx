@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import ContactForm from './ContactForm';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Contact – AdminHub',
@@ -7,5 +8,10 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
-  return <ContactForm />;
+  return (
+    <Suspense fallback={<div className="text-center mt-20">Loading contact form...</div>}>
+      <ContactForm />
+    </Suspense>
+  );
 }
+
