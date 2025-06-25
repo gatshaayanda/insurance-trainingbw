@@ -97,10 +97,16 @@ export default function ClientProjectDetails() {
       orderBy('timestamp', 'asc')
     )
     const unsub = onSnapshot(q, snap => {
-      setMessages(
-        snap.docs.map(doc => ({ ...(doc.data() as Omit<Message, 'id'>), id: doc.id }))
-      )
-      setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+      const newMessages = snap.docs.map(doc => ({ ...(doc.data() as Omit<Message, 'id'>), id: doc.id }))
+      setMessages(newMessages)
+
+      // ✅ Only scroll if container is scrollable
+      setTimeout(() => {
+        const container = scrollRef.current?.parentElement
+        if (container && container.scrollHeight > container.clientHeight) {
+          scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+        }
+      }, 200)
     })
 
     return () => unsub()
@@ -166,9 +172,7 @@ export default function ClientProjectDetails() {
                   📎 View Uploaded File
                 </a>
               )}
-              <span className="text-xs text-right block mt-1 text-gray-500">
-                {m.sender}
-              </span>
+              <span className="text-xs text-right block mt-1 text-gray-500">{m.sender}</span>
             </div>
           ))}
           <div ref={scrollRef} />
@@ -244,13 +248,13 @@ export default function ClientProjectDetails() {
           </div>
         )}
 
-     {/* ✅ Back to Dashboard Button */}
-      <button
-        onClick={() => router.push('/client/dashboard')}
-        className="mt-6 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-      >
-        ← Back to Dashboard
-      </button>
+        <button
+          onClick={() => router.push('/client/dashboard')}
+          className="mt-6 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+        >
+          ← Back to Dashboard
+        </button>
+
         <ReadLine label="Business" value={project.business} />
         <ReadLine label="Industry" value={project.industry} />
         <ReadLine label="Goals" value={project.goals} />
@@ -263,8 +267,6 @@ export default function ClientProjectDetails() {
         <ReadLine label="Examples / Competitor Sites" value={project.examples} />
         <ReadLine label="Mood / Branding" value={project.mood} />
       </div>
-
- 
     </div>
   )
 }

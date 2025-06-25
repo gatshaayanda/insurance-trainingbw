@@ -39,7 +39,7 @@ export default function ViewProjectPage() {
   const [error, setError] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const isAdmin = true // This page is only for admin, so we allow delete
+  const isAdmin = true
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -62,9 +62,17 @@ export default function ViewProjectPage() {
       collection(firestore, 'projects', id, 'messages'),
       orderBy('timestamp', 'asc')
     )
+
     const unsub = onSnapshot(q, snap => {
       setMessages(snap.docs.map(doc => doc.data() as Message))
-      setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+
+      // ✅ Only scroll if container is overflowing
+      setTimeout(() => {
+        const container = scrollRef.current?.parentElement
+        if (container && container.scrollHeight > container.clientHeight) {
+          scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+        }
+      }, 2000)
     })
 
     return () => unsub()
@@ -188,52 +196,48 @@ export default function ViewProjectPage() {
             📤 Send Message
           </button>
         </form>
-
-
-        
       </div>
 
       {/* Intake Info */}
       <h2 className="text-xl font-bold text-[#0F264B] mb-4">📋 Preliminary Intake Info</h2>
-       
-             {project.live_revisable_draft_link && (
-          <div>
-            <span className="font-semibold block">🚀 Live Draft:</span>
-            <a
-              href={project.live_revisable_draft_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline font-semibold"
-            >
-              View Live Site
-            </a>
-          </div>
-        )}
-                <Read label="Progress Update" value={project.progress_update} />
-     
-       
-       {project.resource_link && (
-          <div>
-            <span className="font-semibold block">📎 Resource Link:</span>
-            <a
-              href={project.resource_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline"
-            >
-              Open Shared File
-            </a>
-          </div>
-        )}
 
-  
+      {project.live_revisable_draft_link && (
+        <div>
+          <span className="font-semibold block">🚀 Live Draft:</span>
+          <a
+            href={project.live_revisable_draft_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline font-semibold"
+          >
+            View Live Site
+          </a>
+        </div>
+      )}
 
-                      <button
+      <Read label="Progress Update" value={project.progress_update} />
+
+      {project.resource_link && (
+        <div>
+          <span className="font-semibold block">📎 Resource Link:</span>
+          <a
+            href={project.resource_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline"
+          >
+            Open Shared File
+          </a>
+        </div>
+      )}
+
+      <button
         onClick={() => router.push('/admin/project')}
         className="mt-6 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
       >
         ← Back to Projects
       </button>
+
       <div className="space-y-3 text-sm">
         <Read label="Client Name" value={project.client_name} />
         <Read label="Client Email" value={project.client_email} />
@@ -247,13 +251,9 @@ export default function ViewProjectPage() {
         <Read label="Design Preferences" value={project.design_prefs} />
         <Read label="Examples / Competitors" value={project.examples} />
         <Read label="Mood / Branding" value={project.mood} />
-   <Read label="Admin Notes" value={project.admin_notes} />
+        <Read label="Admin Notes" value={project.admin_notes} />
         <Read label="Client Admin Panel Access" value={project.admin_panel ? 'Yes' : 'No'} />
-
-       
       </div>
-
-
     </div>
   )
 }

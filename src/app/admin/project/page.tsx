@@ -98,7 +98,7 @@ export default function ProjectListPage() {
               <span>
                 {p.name}
                 {p.hasClientMessages && (
-                  <span className="ml-2 text-green-600 font-medium text-sm">📬 New Messages</span>
+                  <span className="ml-2 text-green-600 font-medium text-sm">📬 New Messages, click "view" to your right!</span>
                 )}
               </span>
               <div className="space-x-2">
