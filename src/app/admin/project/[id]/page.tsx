@@ -11,6 +11,8 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  getDocs,
+  deleteDoc,
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { firestore, storage } from '@/utils/firebaseConfig'
@@ -36,6 +38,8 @@ export default function ViewProjectPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  const isAdmin = true // This page is only for admin, so we allow delete
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -89,6 +93,16 @@ export default function ViewProjectPage() {
     setFile(null)
   }
 
+  async function handleDeleteAllMessages() {
+    const confirmDelete = confirm('Are you sure you want to delete all messages?')
+    if (!confirmDelete) return
+
+    const q = collection(firestore, 'projects', id, 'messages')
+    const snap = await getDocs(q)
+    const deletions = snap.docs.map(doc => deleteDoc(doc.ref))
+    await Promise.all(deletions)
+  }
+
   if (loading) return <AdminHubLoader />
   if (error) return <p className="text-center text-red-500 mt-10">{error}</p>
   if (!project) return null
@@ -99,7 +113,17 @@ export default function ViewProjectPage() {
 
       {/* 💬 Project Messages */}
       <div className="mb-12">
-        <h2 className="text-xl font-bold text-[#0F264B] mb-4">💬 Project Messages</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-[#0F264B]">💬 Project Messages</h2>
+          {isAdmin && (
+            <button
+              onClick={handleDeleteAllMessages}
+              className="text-sm text-red-600 border border-red-500 px-3 py-1 rounded hover:bg-red-50"
+            >
+              🗑️ Delete All
+            </button>
+          )}
+        </div>
 
         <div className="space-y-4 max-h-[400px] overflow-y-auto border rounded p-4 bg-gray-50">
           {messages.map((m, i) => (
@@ -164,28 +188,31 @@ export default function ViewProjectPage() {
             📤 Send Message
           </button>
         </form>
+
+
+        
       </div>
 
       {/* Intake Info */}
       <h2 className="text-xl font-bold text-[#0F264B] mb-4">📋 Preliminary Intake Info</h2>
-      <div className="space-y-3 text-sm">
-        <Read label="Client Name" value={project.client_name} />
-        <Read label="Client Email" value={project.client_email} />
-        <Read label="Business" value={project.business} />
-        <Read label="Industry" value={project.industry} />
-        <Read label="Goals" value={project.goals} />
-        <Read label="Pain Points" value={project.painpoints} />
-        <Read label="Pages" value={project.pages} />
-        <Read label="Content" value={project.content} />
-        <Read label="Features" value={project.features} />
-        <Read label="Design Preferences" value={project.design_prefs} />
-        <Read label="Examples / Competitors" value={project.examples} />
-        <Read label="Mood / Branding" value={project.mood} />
-        <Read label="Progress Update" value={project.progress_update} />
-        <Read label="Admin Notes" value={project.admin_notes} />
-        <Read label="Client Admin Panel Access" value={project.admin_panel ? 'Yes' : 'No'} />
-
-        {project.resource_link && (
+       
+             {project.live_revisable_draft_link && (
+          <div>
+            <span className="font-semibold block">🚀 Live Draft:</span>
+            <a
+              href={project.live_revisable_draft_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline font-semibold"
+            >
+              View Live Site
+            </a>
+          </div>
+        )}
+                <Read label="Progress Update" value={project.progress_update} />
+     
+       
+       {project.resource_link && (
           <div>
             <span className="font-semibold block">📎 Resource Link:</span>
             <a
@@ -199,27 +226,34 @@ export default function ViewProjectPage() {
           </div>
         )}
 
-        {project.live_revisable_draft_link && (
-          <div>
-            <span className="font-semibold block">🚀 Live Draft:</span>
-            <a
-              href={project.live_revisable_draft_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline font-semibold"
-            >
-              View Live Site
-            </a>
-          </div>
-        )}
-      </div>
+  
 
-      <button
+                      <button
         onClick={() => router.push('/admin/project')}
         className="mt-6 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
       >
         ← Back to Projects
       </button>
+      <div className="space-y-3 text-sm">
+        <Read label="Client Name" value={project.client_name} />
+        <Read label="Client Email" value={project.client_email} />
+        <Read label="Business" value={project.business} />
+        <Read label="Industry" value={project.industry} />
+        <Read label="Goals" value={project.goals} />
+        <Read label="Pain Points" value={project.painpoints} />
+        <Read label="Pages" value={project.pages} />
+        <Read label="Content" value={project.content} />
+        <Read label="Features" value={project.features} />
+        <Read label="Design Preferences" value={project.design_prefs} />
+        <Read label="Examples / Competitors" value={project.examples} />
+        <Read label="Mood / Branding" value={project.mood} />
+   <Read label="Admin Notes" value={project.admin_notes} />
+        <Read label="Client Admin Panel Access" value={project.admin_panel ? 'Yes' : 'No'} />
+
+       
+      </div>
+
+
     </div>
   )
 }

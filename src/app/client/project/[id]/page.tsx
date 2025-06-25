@@ -36,7 +36,7 @@ interface Project {
 }
 
 interface Message {
-  id: string // ✅ Add this to resolve TS error
+  id: string
   text: string
   sender: string
   link?: string
@@ -207,17 +207,19 @@ export default function ClientProjectDetails() {
       {/* Intake Info */}
       <h2 className="text-xl font-bold text-[#0F264B] mb-4">📋 Preliminary Intake Info</h2>
       <div className="border p-6 rounded-2xl shadow-xl bg-white space-y-4">
-        <ReadLine label="Business" value={project.business} />
-        <ReadLine label="Industry" value={project.industry} />
-        <ReadLine label="Goals" value={project.goals} />
-        <ReadLine label="Pain Points" value={project.painpoints} />
-        <ReadLine label="Pages" value={project.pages} />
-        <ReadLine label="Content" value={project.content} />
-        <ReadLine label="Features" value={project.features} />
-        <ReadLine label="Admin Panel Access" value={project.admin_panel ? 'Yes' : 'No'} />
-        <ReadLine label="Design Preferences" value={project.design_prefs} />
-        <ReadLine label="Examples / Competitor Sites" value={project.examples} />
-        <ReadLine label="Mood / Branding" value={project.mood} />
+        {project.live_revisable_draft_link && (
+          <div>
+            <span className="font-semibold text-blue-700 block mb-1">Live Project Link:</span>
+            <a
+              href={project.live_revisable_draft_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-700 font-bold underline text-lg"
+            >
+              🚀 Open Site/App
+            </a>
+          </div>
+        )}
 
         <div>
           <span className="font-semibold text-blue-700 block mb-1">Progress Update:</span>
@@ -229,7 +231,7 @@ export default function ClientProjectDetails() {
         </div>
 
         {project.resource_link && (
-          <div className="mt-2">
+          <div>
             <span className="font-semibold text-gray-700 block mb-1">Shared Resource Link:</span>
             <a
               href={project.resource_link}
@@ -242,20 +244,27 @@ export default function ClientProjectDetails() {
           </div>
         )}
 
-        {project.live_revisable_draft_link && (
-          <div className="mt-4">
-            <span className="font-semibold text-blue-700 block mb-1">Live Project Link:</span>
-            <a
-              href={project.live_revisable_draft_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-700 font-bold underline text-lg"
-            >
-              🚀 Open Site/App
-            </a>
-          </div>
-        )}
+     {/* ✅ Back to Dashboard Button */}
+      <button
+        onClick={() => router.push('/client/dashboard')}
+        className="mt-6 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+      >
+        ← Back to Dashboard
+      </button>
+        <ReadLine label="Business" value={project.business} />
+        <ReadLine label="Industry" value={project.industry} />
+        <ReadLine label="Goals" value={project.goals} />
+        <ReadLine label="Pain Points" value={project.painpoints} />
+        <ReadLine label="Pages" value={project.pages} />
+        <ReadLine label="Content" value={project.content} />
+        <ReadLine label="Features" value={project.features} />
+        <ReadLine label="Admin Panel Access" value={project.admin_panel ? 'Yes' : 'No'} />
+        <ReadLine label="Design Preferences" value={project.design_prefs} />
+        <ReadLine label="Examples / Competitor Sites" value={project.examples} />
+        <ReadLine label="Mood / Branding" value={project.mood} />
       </div>
+
+ 
     </div>
   )
 }

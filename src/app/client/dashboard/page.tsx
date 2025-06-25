@@ -2,12 +2,19 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  getCountFromServer,
+} from 'firebase/firestore'
 import { firestore } from '@/utils/firebaseConfig'
 import AdminHubLoader from '@/components/AdminHubLoader'
 
 export default function ClientDashboard() {
   const [projects, setProjects] = useState<any[]>([])
+  const [messageAlerts, setMessageAlerts] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -33,6 +40,15 @@ export default function ClientDashboard() {
         const snap = await getDocs(q)
         const data = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         setProjects(data)
+
+        // 🔔 Check for messages in each project
+        const alerts: Record<string, boolean> = {}
+        for (const doc of snap.docs) {
+          const messagesCol = collection(firestore, 'projects', doc.id, 'messages')
+          const countSnap = await getCountFromServer(messagesCol)
+          alerts[doc.id] = countSnap.data().count > 0
+        }
+        setMessageAlerts(alerts)
       } catch (err) {
         console.error(err)
         setError('Error fetching projects')
@@ -45,7 +61,6 @@ export default function ClientDashboard() {
   }, [router])
 
   const handleLogout = () => {
-    // Clear the role cookie
     document.cookie = 'role=; path=/; max-age=0;'
     router.replace('/client/login')
   }
@@ -76,6 +91,12 @@ export default function ClientDashboard() {
               <h2 className="font-semibold">{p.business || p.client_name}</h2>
               <p className="text-sm text-gray-500">{p.industry}</p>
               <p><strong>Status:</strong> {p.progress_update || '—'}</p>
+              {messageAlerts[p.id] && (
+<p className="text-green-600 text-sm font-medium mt-1">
+  📬 You have new messages from Admin Hub! Click "Open Project" below. 🙂
+</p>
+
+              )}
               <a
                 href={`/client/project/${p.id}`}
                 className="text-blue-600 underline mt-2 inline-block"
