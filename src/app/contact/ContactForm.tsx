@@ -38,7 +38,7 @@ export default function ContactForm() {
             type="text"
             name="contact"
             required
-            placeholder="The Best way to contact you, Email or WhatsApp"
+            placeholder="Enter the best way to contact you, Email or WhatsApp, so we can connect!"
             className="w-full border p-3 rounded"
           />
 
