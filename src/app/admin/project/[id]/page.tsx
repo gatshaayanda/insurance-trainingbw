@@ -238,6 +238,7 @@ export default function ViewProjectPage() {
         ← Back to Projects
       </button>
 
+
       <div className="space-y-3 text-sm">
         <Read label="Client Name" value={project.client_name} />
         <Read label="Client Email" value={project.client_email} />

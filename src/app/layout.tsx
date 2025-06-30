@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import Loader from '@/components/AdminHubLoader';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { LanguageProvider } from '@/context/LanguageContext'; // ✅ ADD THIS
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
@@ -24,16 +25,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body
         className={`min-h-screen flex flex-col ${geistSans.variable} ${geistMono.variable} antialiased bg-[--background] text-[--foreground]`}
       >
-        <AnalyticsProvider>
-          <Loader />
-          <div className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-200 shadow-sm">
-            <Header />
-          </div>
-          <main className="flex-grow bg-white bg-opacity-90">{children}</main>
-          <Footer />
-          <Analytics />
-          <SpeedInsights />
-        </AnalyticsProvider>
+        <LanguageProvider> {/* ✅ WRAP EVERYTHING INSIDE HERE */}
+          <AnalyticsProvider>
+            <Loader />
+            <div className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-200 shadow-sm">
+              <Header />
+            </div>
+            <main className="flex-grow bg-white bg-opacity-90">{children}</main>
+            <Footer />
+            <Analytics />
+            <SpeedInsights />
+          </AnalyticsProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

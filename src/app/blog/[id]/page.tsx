@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { firestore } from '@/utils/firebaseConfig';
+import { translate } from '@/utils/translate';
 
 interface Blog {
   title: string;
@@ -13,10 +14,10 @@ interface Blog {
 
 export default function BlogPostPage() {
   const router = useRouter();
-  const path = usePathname();          // e.g. "/blog/abc123"
-  const id = path.split('/').pop()!;   // "abc123"
-
+  const path = usePathname();
+  const id = path.split('/').pop()!;
   const [post, setPost] = useState<Blog | null>(null);
+  const [translated, setTranslated] = useState<{ title: string; body: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +28,15 @@ export default function BlogPostPage() {
           router.replace('/blog');
           return;
         }
-        setPost(snap.data() as Blog);
+        const data = snap.data() as Blog;
+        setPost(data);
+
+        const [tTitle, tBody] = await Promise.all([
+          translate(data.title),
+          translate(data.body)
+        ]);
+
+        setTranslated({ title: tTitle, body: tBody });
       } catch {
         router.replace('/blog');
       } finally {
@@ -36,12 +45,8 @@ export default function BlogPostPage() {
     })();
   }, [id, router]);
 
-  if (loading) {
-    return <p className="text-center py-20">Loading post…</p>;
-  }
-  if (!post) {
-    return <p className="text-center py-20">Post not found.</p>;
-  }
+  if (loading) return <p className="text-center py-20">Loading post…</p>;
+  if (!post || !translated) return <p className="text-center py-20">Post not found.</p>;
 
   return (
     <main className="min-h-screen py-20 px-6 bg-[#F1F1F1] text-[#0B1A33]">
@@ -50,15 +55,13 @@ export default function BlogPostPage() {
           className="text-sm text-blue-600 hover:underline"
           onClick={() => router.push('/blog')}
         >
-          ← Back to Insights &amp; Updates
+          ← Back to Insights & Updates
         </button>
-        <h1 className="text-4xl font-bold">{post.title}</h1>
+        <h1 className="text-4xl font-bold">{translated.title}</h1>
         <p className="text-gray-500 text-sm">
           {new Date(post.created_at.seconds * 1000).toLocaleDateString()}
         </p>
-        <div className="prose max-w-none whitespace-pre-wrap">
-          {post.body}
-        </div>
+        <div className="prose max-w-none whitespace-pre-wrap">{translated.body}</div>
       </div>
     </main>
   );
