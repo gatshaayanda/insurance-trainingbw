@@ -11,14 +11,20 @@ export default function CreateProjectPage() {
   const [form, setForm] = useState({
     client_name: '',
     client_email: '',
-    projectGoals: '',
-    painPoints: '',
+    business: '',
+    industry: '',
+    goals: '',
+    painpoints: '',
     pages: '',
     content: '',
     features: '',
-    designPreferences: '',
-    inspiration: '',
+    admin_panel: false,
+    design_prefs: '',
+    examples: '',
     mood: '',
+    resource_link: '',
+    admin_notes: '',
+    progress_update: '',
   })
 
   const [message, setMessage] = useState('')
@@ -46,14 +52,20 @@ export default function CreateProjectPage() {
       setForm({
         client_name: '',
         client_email: '',
-        projectGoals: '',
-        painPoints: '',
+        business: '',
+        industry: '',
+        goals: '',
+        painpoints: '',
         pages: '',
         content: '',
         features: '',
-        designPreferences: '',
-        inspiration: '',
+        admin_panel: false,
+        design_prefs: '',
+        examples: '',
         mood: '',
+        resource_link: '',
+        admin_notes: '',
+        progress_update: '',
       })
     } catch (err: any) {
       setMessage('❌ Error: ' + err.message)
@@ -73,48 +85,139 @@ export default function CreateProjectPage() {
       <h1 className="text-3xl font-bold mb-6">Create New Project</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          placeholder="Client Full Name"
-          value={form.client_name}
-          onChange={e => handleChange('client_name', e.target.value)}
-          required
-          className="w-full border px-3 py-2 rounded"
-        />
-        <input
-          placeholder="Client Email"
-          type="email"
-          value={form.client_email}
-          onChange={e => handleChange('client_email', e.target.value)}
-          required
-          className="w-full border px-3 py-2 rounded"
-        />
-
-        {[
-          ['projectGoals', 'Project Goals'],
-          ['painPoints', 'Pain Points'],
-          ['pages', 'Website Pages (Home, About, Contact...)'],
-          ['content', 'What content do you already have?'],
-          ['features', 'What features do you want?'],
-          ['designPreferences', 'Design Preferences'],
-          ['inspiration', 'Examples or Inspiration'],
-          ['mood', 'What feeling or vibe should the site give?'],
-        ].map(([field, placeholder]) => (
-          <textarea
-            key={field}
-            placeholder={placeholder as string}
-            value={form[field as keyof typeof form]}
-            onChange={e => handleChange(field as string, e.target.value)}
+        <div className="grid md:grid-cols-2 gap-6">
+          <input
+            placeholder="Client Full Name"
+            value={form.client_name}
+            onChange={e => handleChange('client_name', e.target.value)}
+            required
             className="w-full border px-3 py-2 rounded"
-            rows={3}
           />
-        ))}
+          <input
+            placeholder="Client Contact Info"
+            type="email"
+            value={form.client_email}
+            onChange={e => handleChange('client_email', e.target.value)}
+            required
+            className="w-full border px-3 py-2 rounded"
+          />
+          <input
+            placeholder="Business Name"
+            value={form.business}
+            onChange={e => handleChange('business', e.target.value)}
+            className="w-full border px-3 py-2 rounded"
+          />
+          <select
+            value={form.industry}
+            onChange={e => handleChange('industry', e.target.value)}
+            required
+            className="w-full border px-3 py-2 rounded"
+          >
+            <option value="">Select Industry</option>
+            {[
+              'Beauty','Church','Finance','Media','Events','Fashion',
+              'Gaming','Education','eCommerce','Repair','Insurance',
+              'Food & Beverage','Transport & Logistics','Other'
+            ].map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        </div>
 
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          Submit
-        </button>
+        <input
+          placeholder="Google Docs / Sheets / File Link (optional)"
+          value={form.resource_link}
+          onChange={e => handleChange('resource_link', e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+        />
+
+        <textarea
+          placeholder="What are your project goals?"
+          value={form.goals}
+          onChange={e => handleChange('goals', e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+        />
+        <textarea
+          placeholder="What pain points are you facing?"
+          value={form.painpoints}
+          onChange={e => handleChange('painpoints', e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+        />
+        <textarea
+          placeholder="Which pages would you like included?"
+          value={form.pages}
+          onChange={e => handleChange('pages', e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+        />
+        <textarea
+          placeholder="Do you have existing content?"
+          value={form.content}
+          onChange={e => handleChange('content', e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+        />
+        <textarea
+          placeholder="What features or functionality do you want?"
+          value={form.features}
+          onChange={e => handleChange('features', e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+        />
+        <textarea
+          placeholder="Any design preferences or ideas?"
+          value={form.design_prefs}
+          onChange={e => handleChange('design_prefs', e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+        />
+        <textarea
+          placeholder="Any example sites or inspiration?"
+          value={form.examples}
+          onChange={e => handleChange('examples', e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+        />
+        <textarea
+          placeholder="What mood or vibe should the brand give?"
+          value={form.mood}
+          onChange={e => handleChange('mood', e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+        />
+
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            checked={form.admin_panel}
+            onChange={e => handleChange('admin_panel', e.target.checked)}
+            className="mr-2"
+          />
+          <span>Client wants access to admin panel</span>
+        </div>
+
+        <textarea
+          placeholder="Admin Notes (Internal Only)"
+          value={form.admin_notes}
+          onChange={e => handleChange('admin_notes', e.target.value)}
+          className="w-full border px-3 py-2 rounded bg-gray-100"
+        />
+        <textarea
+          placeholder="Progress Update (Client will see this)"
+          value={form.progress_update}
+          onChange={e => handleChange('progress_update', e.target.value)}
+          className="w-full border px-3 py-2 rounded"
+        />
+
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            className="px-4 py-2 bg-green-600 text-white rounded"
+          >
+            Submit Project
+          </button>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="px-4 py-2 bg-gray-200 rounded"
+          >
+            Cancel
+          </button>
+        </div>
 
         {message && (
           <p

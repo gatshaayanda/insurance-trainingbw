@@ -41,7 +41,6 @@ export default function ClientDashboard() {
         const data = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         setProjects(data)
 
-        // 🔔 Check for messages in each project
         const alerts: Record<string, boolean> = {}
         for (const doc of snap.docs) {
           const messagesCol = collection(firestore, 'projects', doc.id, 'messages')
@@ -68,10 +67,19 @@ export default function ClientDashboard() {
   if (loading) return <AdminHubLoader />
   if (error) return <p className="text-red-500 text-center mt-10">{error}</p>
 
+  const firstProject = projects[0]
+  const clientName = firstProject?.client_name || 'there'
+  const industry = firstProject?.industry || 'business'
+
   return (
     <div className="max-w-4xl mx-auto mt-10 px-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Your Projects</h1>
+        <div>
+          <h1 className="text-2xl font-bold">👋 Hey {clientName}!</h1>
+          <p className="text-gray-600 mt-1">
+            Let’s build something powerful for your <strong>{industry}</strong> brand.
+          </p>
+        </div>
         <button
           onClick={handleLogout}
           className="bg-red-100 text-red-600 px-4 py-2 rounded hover:bg-red-200 text-sm font-medium"
@@ -92,10 +100,9 @@ export default function ClientDashboard() {
               <p className="text-sm text-gray-500">{p.industry}</p>
               <p><strong>Status:</strong> {p.progress_update || '—'}</p>
               {messageAlerts[p.id] && (
-<p className="text-green-600 text-sm font-medium mt-1">
-  📬 You have new messages from Admin Hub! Click "Open Project" below. 🙂
-</p>
-
+                <p className="text-green-600 text-sm font-medium mt-1">
+                  📬 You have new messages from Admin Hub! Click "Open Project" below. 🙂
+                </p>
               )}
               <a
                 href={`/client/project/${p.id}`}
