@@ -85,22 +85,32 @@ export default function EditProjectPage() {
     }
   }
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this project?')) return
-    try {
-      const res = await fetch(`/api/project/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      })
-      if (!res.ok) {
-        const { error: msg } = await res.json()
-        throw new Error(msg || 'Delete failed')
+const handleDelete = async () => {
+  if (!confirm('Are you sure you want to delete this project?')) return
+  try {
+    const res = await fetch(`/api/project/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    })
+
+    if (!res.ok) {
+      let msg = 'Delete failed'
+      try {
+        const data = await res.json()
+        msg = data.error || msg
+      } catch {
+        // No JSON response, ignore
       }
-      router.push('/admin/projects')
-    } catch (e: any) {
-      setError(e.message)
+      throw new Error(msg)
     }
+
+    router.push('/admin/project')
+  } catch (e: any) {
+    setError(e.message)
   }
+}
+
+
 
   if (loading) return <AdminHubLoader />
 
