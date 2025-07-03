@@ -1,15 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { collection, getDocs } from 'firebase/firestore';
+import { firestore } from '@/utils/firebaseConfig';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/lib/translations';
+
+interface Project {
+  id: string;
+  industry: string;
+  progress_update: string;
+}
 
 export default function ClientLoginPage() {
   const router = useRouter();
   const [pw, setPw] = useState('');
   const [error, setError] = useState('');
   const { lang } = useLanguage();
+
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,8 +45,44 @@ export default function ClientLoginPage() {
     }
   }
 
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const snap = await getDocs(collection(firestore, 'projects'));
+        const docs = snap.docs
+          .map(doc => ({
+            id: doc.id,
+            ...(doc.data() as Partial<Project>),
+          }))
+          .filter(
+            p =>
+              typeof p.industry === 'string' &&
+              typeof p.progress_update === 'string' &&
+              p.progress_update.trim() !== ''
+          );
+        setProjects(docs as Project[]);
+      } catch (err) {
+        console.error('Error loading project data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex(prev =>
+        projects.length > 0 ? (prev + 1) % projects.length : 0
+      );
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [projects]);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100 px-4 py-12 space-y-10">
+      {/* 🔐 Login Form */}
       <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-lg shadow-sm w-full max-w-md space-y-4"
@@ -58,6 +106,27 @@ export default function ClientLoginPage() {
         </button>
         {error && <p className="text-red-500 text-center">{error}</p>}
       </form>
+
+      {/* 🔁 Public Project Progress Carousel */}
+      <div className="w-full max-w-md bg-white p-5 rounded shadow text-sm text-[#0F264B] text-center">
+        {loading ? (
+          <p className="italic text-gray-500">Loading project updates...</p>
+        ) : projects.length === 0 ? (
+          <p className="italic text-gray-500">No public updates yet.</p>
+        ) : (
+          <>
+            <p className="font-semibold">
+              📊 {projects.length} active projects and counting!
+            </p>
+            <p className="mt-2 italic text-[#4F5F7A]">
+              {projects[currentIndex]?.progress_update} <br />
+              <span className="text-xs text-[#999]">
+                — {projects[currentIndex]?.industry}
+              </span>
+            </p>
+          </>
+        )}
+      </div>
     </div>
   );
 }

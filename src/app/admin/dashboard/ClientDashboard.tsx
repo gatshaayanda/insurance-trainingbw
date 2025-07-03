@@ -39,17 +39,17 @@ export default function ClientDashboard() {
 
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-3 bg-white p-4 rounded shadow">
-        <a href="/admin/project" className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded">
+        <a href="/admin/project" className="flex items-center gap-2 bg-blue-100 text-white px-4 py-2 rounded">
           <PlusCircle size={16} /> New Project
         </a>
-<a href="/admin/invite" className="flex items-center gap-2 bg-yellow-400 px-4 py-2 rounded">
+<a href="/admin/invite" className="flex items-center gap-2 bg-yellow-100 px-4 py-2 rounded">
   <Mail size={16} /> Invite Client
 </a>
 
-        <a href="/admin/blog" className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded">
+        <a href="/admin/blog" className="flex items-center gap-2 bg-green-100 text-white px-4 py-2 rounded">
           <Newspaper size={16} /> Write Blog
         </a>
-        <a href="/admin/analytics" className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded">
+        <a href="/admin/analytics" className="flex items-center gap-2 bg-gray-100 text-white px-4 py-2 rounded">
           <BarChart2 size={16} /> View Analytics
         </a>
       </div>

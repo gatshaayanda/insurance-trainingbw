@@ -6,6 +6,14 @@ import { useRouter } from 'next/navigation';
 import { Code, RefreshCcw, ArrowRightCircle } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/lib/translations';
+import { collection, getDocs } from 'firebase/firestore';
+import { firestore } from '@/utils/firebaseConfig';
+
+interface Project {
+  id: string;
+  industry: string;
+  progress_update: string;
+}
 
 export default function HomePage() {
   const router = useRouter();
@@ -15,6 +23,10 @@ export default function HomePage() {
   const [greeting, setGreeting] = useState('');
   const [emoji, setEmoji] = useState('');
 
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   useEffect(() => {
     const hour = new Date().getHours();
     setGreeting(translations.greeting[lang]);
@@ -23,7 +35,9 @@ export default function HomePage() {
     const onKey = (e: KeyboardEvent) => {
       keys.current.push(e.key.toLowerCase());
       if (keys.current.length > 5) keys.current.shift();
-      if (keys.current.join('') === 'admin') router.push('/login-secret-login-for-admins97F4B2NXQ');
+      if (keys.current.join('') === 'admin') {
+        router.push('/login-secret-login-for-admins97F4B2NXQ');
+      }
     };
 
     window.addEventListener('keydown', onKey);
@@ -39,6 +53,42 @@ export default function HomePage() {
       setTouchStart(null);
     },
   };
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const snap = await getDocs(collection(firestore, 'projects'));
+        const docs = snap.docs
+          .map(doc => ({
+            id: doc.id,
+            ...(doc.data() as Partial<Project>),
+          }))
+          .filter(
+            p =>
+              typeof p.industry === 'string' &&
+              typeof p.progress_update === 'string' &&
+              p.progress_update.trim() !== ''
+          );
+
+        setProjects(docs as Project[]);
+      } catch (err) {
+        console.error('❌ Error fetching projects:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex(prev =>
+        projects.length > 0 ? (prev + 1) % projects.length : 0
+      );
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [projects]);
 
   const services = [
     {
@@ -92,7 +142,10 @@ export default function HomePage() {
       <section id="services" className="py-20 bg-[#FFFDF6]">
         <div className="container mx-auto px-6 grid gap-12 text-center md:grid-cols-3">
           {services.map(({ icon, title, body }) => (
-            <div key={title} className="p-6 rounded-2xl shadow-md border bg-white hover:shadow-lg transition">
+            <div
+              key={title}
+              className="p-6 rounded-2xl shadow-md border bg-white hover:shadow-lg transition"
+            >
               <div className="flex justify-center mb-4">{icon}</div>
               <h3 className="text-xl font-semibold mb-2 text-[#0F264B]">{title}</h3>
               <div className="text-sm text-[#4F5F7A]">{body}</div>
@@ -103,17 +156,41 @@ export default function HomePage() {
 
       <section className="py-20 bg-[#F1F1F1] text-center px-6">
         <div className="container mx-auto max-w-3xl space-y-6">
-          <h2 className="text-2xl font-bold text-[#0F264B]">{translations.aboutTitle[lang]}</h2>
-          <p className="text-[#4F5F7A]">
-            {translations.aboutBody[lang]}
-          </p>
+          <h2 className="text-2xl font-bold text-[#0F264B]">
+            {translations.aboutTitle[lang]}
+          </h2>
+          <p className="text-[#4F5F7A]">{translations.aboutBody[lang]}</p>
         </div>
       </section>
 
-      <section className="py-16 bg-[#F9FAFB] text-center">
-        <div className="container mx-auto max-w-xl px-6 space-y-4">
-          <h2 className="text-xl font-bold text-[#0F264B]">{translations.clientTitle[lang]}</h2>
+      {/* 👇 Client Projects Carousel */}
+      <section className="py-16 bg-[#F9FAFB] text-center px-6">
+        <div className="container mx-auto max-w-xl space-y-6">
+          <h2 className="text-xl font-bold text-[#0F264B]">
+            {translations.clientTitle[lang]}
+          </h2>
           <p className="text-[#4F5F7A]">{translations.clientBody[lang]}</p>
+
+          <div className="text-sm text-[#0F264B] bg-white shadow rounded p-4 transition-all duration-500 min-h-[72px]">
+            {loading ? (
+              <p className="italic text-gray-500">Loading project data...</p>
+            ) : projects.length === 0 ? (
+              <p className="italic text-gray-500">No public updates yet.</p>
+            ) : (
+              <>
+                <p className="font-semibold">
+                  📊 {projects.length} active projects and counting!
+                </p>
+                <p className="mt-2 italic text-[#4F5F7A]">
+                  {projects[currentIndex]?.progress_update} <br />
+                  <span className="text-xs text-[#999]">
+                    — Project from the {projects[currentIndex]?.industry} industry
+                  </span>
+                </p>
+              </>
+            )}
+          </div>
+
           <Link
             href="/client/login"
             className="inline-block bg-[#0F264B] text-white px-6 py-3 rounded-full font-semibold hover:brightness-110"
@@ -123,10 +200,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ♻️ Sustainability Badge */}
       <section className="py-12 bg-white border-t border-gray-100 text-center px-6">
         <div className="container mx-auto max-w-2xl space-y-4">
-          <h2 className="text-xl font-bold text-[#0F264B]">{translations.greenTitle[lang]}</h2>
+          <h2 className="text-xl font-bold text-[#0F264B]">
+            {translations.greenTitle[lang]}
+          </h2>
           <p className="text-[#4F5F7A] text-sm">
             {translations.greenBody1[lang]}{' '}
             <a
@@ -139,15 +217,15 @@ export default function HomePage() {
             </a>
             .
           </p>
-          <p className="text-[#4F5F7A] text-sm">
-            {translations.greenBody2[lang]}
-          </p>
+          <p className="text-[#4F5F7A] text-sm">{translations.greenBody2[lang]}</p>
         </div>
       </section>
 
       <section id="contact" className="py-20 bg-white text-center">
         <div className="container mx-auto max-w-xl px-6">
-          <h2 className="text-2xl font-bold text-[#0F264B] mb-4">{translations.contactTitle[lang]}</h2>
+          <h2 className="text-2xl font-bold text-[#0F264B] mb-4">
+            {translations.contactTitle[lang]}
+          </h2>
           <p className="text-[#4F5F7A] mb-8">{translations.contactBody[lang]}</p>
           <Link
             href="mailto:noreplyadhubmvp@gmail.com"

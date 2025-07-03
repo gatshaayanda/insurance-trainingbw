@@ -26,7 +26,6 @@ interface Project {
   pages: string
   content: string
   features: string
-  admin_panel: boolean
   design_prefs: string
   examples: string
   mood: string
@@ -262,7 +261,6 @@ export default function ClientProjectDetails() {
         <ReadLine label="Pages" value={project.pages} />
         <ReadLine label="Content" value={project.content} />
         <ReadLine label="Features" value={project.features} />
-        <ReadLine label="Admin Panel Access" value={project.admin_panel ? 'Yes' : 'No'} />
         <ReadLine label="Design Preferences" value={project.design_prefs} />
         <ReadLine label="Examples / Competitor Sites" value={project.examples} />
         <ReadLine label="Mood / Branding" value={project.mood} />
