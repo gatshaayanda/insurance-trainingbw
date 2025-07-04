@@ -1,4 +1,3 @@
-// src/app/admin/dashboard/ClientDashboard.tsx
 'use client'
 
 import { useRouter } from 'next/navigation'
@@ -9,6 +8,7 @@ import {
   Mail,
   BarChart2,
   LogOut,
+  Megaphone,
 } from 'lucide-react'
 
 export default function ClientDashboard() {
@@ -16,7 +16,7 @@ export default function ClientDashboard() {
 
   const handleLogout = async () => {
     await fetch('/api/logout', {
-      method:      'POST',
+      method: 'POST',
       credentials: 'include',
     })
     router.replace('/login')
@@ -42,15 +42,21 @@ export default function ClientDashboard() {
         <a href="/admin/project" className="flex items-center gap-2 bg-blue-100 text-white px-4 py-2 rounded">
           <PlusCircle size={16} /> New Project
         </a>
-<a href="/admin/invite" className="flex items-center gap-2 bg-yellow-100 px-4 py-2 rounded">
-  <Mail size={16} /> Invite Client
-</a>
+
+        <a href="/admin/invite" className="flex items-center gap-2 bg-yellow-100 text-white px-4 py-2 rounded">
+          <Mail size={16} /> Invite Client
+        </a>
 
         <a href="/admin/blog" className="flex items-center gap-2 bg-green-100 text-white px-4 py-2 rounded">
           <Newspaper size={16} /> Write Blog
         </a>
+
         <a href="/admin/analytics" className="flex items-center gap-2 bg-gray-100 text-white px-4 py-2 rounded">
           <BarChart2 size={16} /> View Analytics
+        </a>
+
+        <a href="/admin/marketing-overview" className="flex items-center gap-2 bg-purple-100 text-white px-4 py-2 rounded">
+          <Megaphone size={16} /> Marketing Overview
         </a>
       </div>
 

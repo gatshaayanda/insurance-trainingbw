@@ -2,24 +2,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ✅ Blogs: Public read, admin write
     match /blogs/{blogId} {
       allow read: if true;
       allow create, update: if request.auth == null && request.resource.data.admin_id == 'admin';
       allow delete: if request.auth == null && resource.data.admin_id == 'admin';
     }
 
+    // ✅ Projects: Public reads and admin writes
     match /projects/{projectId} {
-      // ✅ Public can only read industry + progress_update using "get"
       allow get: if request.auth == null &&
         (resource.data.industry is string && resource.data.progress_update is string);
-
-      // ✅ Allow listing all projects if every document satisfies public-read condition
       allow list: if request.auth == null;
-
-      // ✅ Only admin can create or update
       allow write: if request.auth == null && request.resource.data.admin_id == 'admin';
-
-      // ✅ Only admin can delete
       allow delete: if request.auth == null && resource.data.admin_id == 'admin';
 
       match /messages/{messageId} {
@@ -29,11 +24,53 @@ service cloud.firestore {
           request.resource.data.sender is string &&
           request.resource.data.text is string &&
           request.resource.data.timestamp != null;
-
         allow delete: if request.auth == null;
       }
     }
 
+    // ✅ MARKETING - Global Leads
+    match /marketing_leads/{leadId} {
+      allow read: if true;
+      allow create: if request.auth == null && request.resource.data.user is string;
+      allow update, delete: if request.auth == null && resource.data.user is string;
+    }
+
+    // ✅ MARKETING - Global Contacts
+    match /marketing_contacts/{contactId} {
+      allow read: if true;
+      allow create: if request.auth == null && request.resource.data.user is string;
+      allow update, delete: if request.auth == null && resource.data.user is string;
+    }
+
+    // ✅ MARKETING - Global Notes
+    match /marketing_notes/{noteId} {
+      allow read: if true;
+      allow create: if request.auth == null && request.resource.data.user is string;
+      allow update, delete: if request.auth == null && resource.data.user is string;
+    }
+
+    // ✅ MARKETING - Global Quotes
+    match /marketing_quotes/{quoteId} {
+      allow read: if true;
+      allow create: if request.auth == null && request.resource.data.user is string;
+      allow update, delete: if request.auth == null && resource.data.user is string;
+    }
+
+    // ✅ MARKETING - User Subcollections for Personalized Counts
+    match /marketing_users/{email}/leads/{doc} {
+      allow read, write: if request.auth == null;
+    }
+    match /marketing_users/{email}/contacts/{doc} {
+      allow read, write: if request.auth == null;
+    }
+    match /marketing_users/{email}/quotes/{doc} {
+      allow read, write: if request.auth == null;
+    }
+    match /marketing_users/{email}/notes/{doc} {
+      allow read, write: if request.auth == null;
+    }
+
+    // ❌ Deny everything else
     match /{document=**} {
       allow read, write: if false;
     }
