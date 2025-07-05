@@ -199,6 +199,7 @@ export default function UnifiedProspectDashboard() {
       tags: newProspectData.tags,
       user: email,
     }
+
     const lead = {
       name: newProspectData.name,
       contact: newProspectData.email || newProspectData.phone,
@@ -206,30 +207,55 @@ export default function UnifiedProspectDashboard() {
       status: newProspectData.status,
       user: email,
     }
-    const note = {
-      title: newProspectData.email || newProspectData.name || '',
-      content: newProspectData.note,
-      createdAt: new Date(),
-      user: email,
-    }
+
+    const noteContent = newProspectData.note.trim()
 
     try {
-      await Promise.all([
+      const [contactRef] = await Promise.all([
         addDoc(collection(firestore, 'marketing_contacts'), contact),
         addDoc(collection(firestore, 'marketing_leads'), lead),
         addDoc(collection(firestore, `marketing_users/${email}/contacts`), contact),
         addDoc(collection(firestore, `marketing_users/${email}/leads`), lead),
       ])
-      if (newProspectData.note.trim()) {
+
+      if (noteContent) {
+        const note = {
+          title: newProspectData.email || newProspectData.name || '',
+          content: noteContent,
+          createdAt: new Date(),
+          user: email,
+        }
         await Promise.all([
           addDoc(collection(firestore, 'marketing_notes'), note),
           addDoc(collection(firestore, `marketing_users/${email}/notes`), note),
         ])
       }
 
-      setNewProspectData({ name: '', email: '', phone: '', interest: '', status: 'cold', relationship: '', tags: '', note: '' })
+      const newProspect: Prospect = {
+        id: contactRef.id,
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        interest: lead.interest,
+        status: lead.status,
+        relationship: contact.relationship,
+        tags: contact.tags,
+        notes: noteContent ? [noteContent] : [],
+      }
+
+      setProspects(prev => [newProspect, ...prev])
+      setSelectedProspect(newProspect)
       setShowNewModal(false)
-      fetchAllData(email, isAdmin)
+      setNewProspectData({
+        name: '',
+        email: '',
+        phone: '',
+        interest: '',
+        status: 'cold',
+        relationship: '',
+        tags: '',
+        note: '',
+      })
     } catch (err) {
       console.error('Error saving prospect:', err)
     }
@@ -328,6 +354,34 @@ export default function UnifiedProspectDashboard() {
               >
                 🗑️ Delete Prospect
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNewModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
+          <div className="bg-white max-w-md w-full p-6 rounded-lg shadow space-y-3 relative">
+            <button onClick={() => setShowNewModal(false)} className="absolute top-2 right-2 text-gray-500 hover:text-black">✕</button>
+            <h2 className="text-lg font-bold mb-2">+ New Prospect</h2>
+            {['name', 'email', 'phone', 'interest', 'relationship', 'tags', 'note'].map(field => (
+              <input
+                key={field}
+                type="text"
+                placeholder={field[0].toUpperCase() + field.slice(1)}
+                className="w-full border px-3 py-2 rounded text-sm"
+                value={(newProspectData as any)[field]}
+                onChange={e => setNewProspectData({ ...newProspectData, [field]: e.target.value })}
+              />
+            ))}
+            <select className="w-full border px-3 py-2 rounded text-sm" value={newProspectData.status} onChange={e => setNewProspectData({ ...newProspectData, status: e.target.value })}>
+              {['cold', 'warm', 'hot', 'customer'].map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+            <div className="flex justify-end space-x-2 pt-2">
+              <button onClick={() => setShowNewModal(false)} className="text-sm px-3 py-1 rounded border">Cancel</button>
+              <button onClick={saveNewProspect} className="bg-green-600 text-white text-sm px-3 py-1 rounded">Save</button>
             </div>
           </div>
         </div>
