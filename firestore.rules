@@ -32,31 +32,36 @@ service cloud.firestore {
     match /marketing_leads/{leadId} {
       allow read: if true;
       allow create: if request.auth == null && request.resource.data.user is string;
-      allow update, delete: if request.auth == null && resource.data.user is string;
+      allow update, delete: if request.auth == null;
     }
 
     // ✅ MARKETING - Global Contacts
     match /marketing_contacts/{contactId} {
       allow read: if true;
       allow create: if request.auth == null && request.resource.data.user is string;
-      allow update, delete: if request.auth == null && resource.data.user is string;
+      allow update, delete: if request.auth == null;
     }
 
     // ✅ MARKETING - Global Notes
     match /marketing_notes/{noteId} {
       allow read: if true;
       allow create: if request.auth == null && request.resource.data.user is string;
-      allow update, delete: if request.auth == null && resource.data.user is string;
+      allow update, delete: if request.auth == null;
     }
 
     // ✅ MARKETING - Global Quotes
     match /marketing_quotes/{quoteId} {
       allow read: if true;
       allow create: if request.auth == null && request.resource.data.user is string;
-      allow update, delete: if request.auth == null && resource.data.user is string;
+      allow update, delete: if request.auth == null;
     }
 
-    // ✅ MARKETING - User Subcollections for Personalized Counts
+    // ✅ MARKETING - Allow list access to marketing_users for dashboard read
+    match /marketing_users/{email} {
+      allow get, list: if request.auth == null;
+    }
+
+    // ✅ MARKETING - User Subcollections
     match /marketing_users/{email}/leads/{doc} {
       allow read, write: if request.auth == null;
     }

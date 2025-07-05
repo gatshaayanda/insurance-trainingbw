@@ -1,151 +1,178 @@
 'use client'
 
-import type { JSX } from 'react'
-import { useEffect, useState } from 'react'
-import { collection, getDocs, setDoc, doc, Timestamp } from 'firebase/firestore'
-import { firestore } from '@/utils/firebaseConfig'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  collection,
+  getDocs,
+  setDoc,
+  doc,
+  Timestamp,
+  deleteDoc,
+} from 'firebase/firestore'
 import { v4 as uuidv4 } from 'uuid'
+import { firestore } from '@/utils/firebaseConfig'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
+
+interface Prospect {
+  id: string
+  name: string
+  email?: string
+  phone?: string
+  relationship?: string
+  tags?: string
+  interest?: string
+  status?: string
+  notes: string[]
+  user: string
+}
 
 export default function AdminMarketingOverview() {
-  const [contacts, setContacts] = useState<any[]>([])
-  const [leads, setLeads] = useState<any[]>([])
-  const [notes, setNotes] = useState<any[]>([])
+  const router = useRouter()
+  const [prospects, setProspects] = useState<Prospect[]>([])
   const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [selected, setSelected] = useState<Prospect | null>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
 
-  const [showLeadForm, setShowLeadForm] = useState(false)
-  const [showContactForm, setShowContactForm] = useState(false)
-  const [showNoteForm, setShowNoteForm] = useState(false)
-
-  const [leadData, setLeadData] = useState({
-    name: '',
-    contact: '',
-    interest: '',
-    status: 'cold',
-    notes: '',
-    assignedTo: '',
-  })
-
-  const [contactData, setContactData] = useState({
+  const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
     relationship: '',
     tags: '',
+    interest: '',
+    status: 'cold',
+    note: '',
     assignedTo: '',
   })
-
-  const [noteData, setNoteData] = useState({
-    title: '',
-    content: '',
-    assignedTo: '',
-  })
-
-  const router = useRouter()
 
   useEffect(() => {
-    fetchAllData()
+    fetchProspectData()
   }, [])
 
-  const fetchAllData = async () => {
+  const fetchProspectData = async () => {
+    const [contactsSnap, leadsSnap, notesSnap] = await Promise.all([
+      getDocs(collection(firestore, 'marketing_contacts')),
+      getDocs(collection(firestore, 'marketing_leads')),
+      getDocs(collection(firestore, 'marketing_notes')),
+    ])
+
+    const map = new Map<string, Prospect>()
+
+    contactsSnap.docs.forEach(doc => {
+      const d = doc.data()
+      const key = d.email || d.phone || d.name
+      map.set(key, {
+        id: doc.id,
+        name: d.name,
+        email: d.email,
+        phone: d.phone,
+        relationship: d.relationship,
+        tags: d.tags,
+        user: d.user,
+        notes: [],
+      })
+    })
+
+    leadsSnap.docs.forEach(doc => {
+      const d = doc.data()
+      const key = d.contact || d.name
+      const existing = map.get(key) || { id: doc.id, name: d.name, notes: [], user: d.user }
+      map.set(key, {
+        ...existing,
+        interest: d.interest,
+        status: d.status,
+      })
+    })
+
+    notesSnap.docs.forEach(doc => {
+      const d = doc.data()
+      const key = d.title
+      const existing = map.get(key)
+      if (existing) {
+        existing.notes.push(d.content)
+      }
+    })
+
+    setProspects(Array.from(map.values()))
+    setLoading(false)
+  }
+
+  const assignProspect = async () => {
+    const id = uuidv4()
+    const {
+      name,
+      email,
+      phone,
+      relationship,
+      tags,
+      interest,
+      status,
+      note,
+      assignedTo,
+    } = form
+
+    const user = assignedTo
+    const contact = { name, email, phone, relationship, tags, user, addedAt: Timestamp.now() }
+    const lead = { name, contact: phone, interest, status, user }
+    const noteDoc = { title: email || name, content: note, user, createdAt: Timestamp.now() }
+
+    await Promise.all([
+      setDoc(doc(firestore, 'marketing_contacts', id), contact),
+      setDoc(doc(firestore, `marketing_users/${user}/contacts`, id), contact),
+      setDoc(doc(firestore, 'marketing_leads', id), lead),
+      setDoc(doc(firestore, `marketing_users/${user}/leads`, id), lead),
+      setDoc(doc(firestore, 'marketing_notes', id), noteDoc),
+      setDoc(doc(firestore, `marketing_users/${user}/notes`, id), noteDoc),
+    ])
+
+    setForm({
+      name: '',
+      email: '',
+      phone: '',
+      relationship: '',
+      tags: '',
+      interest: '',
+      status: 'cold',
+      note: '',
+      assignedTo: '',
+    })
+    setShowModal(false)
+    fetchProspectData()
+  }
+
+  const downloadPDF = async () => {
+    if (!cardRef.current) return
+    const canvas = await html2canvas(cardRef.current)
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF()
+    const width = pdf.internal.pageSize.getWidth()
+    const height = (canvas.height * width) / canvas.width
+    pdf.addImage(imgData, 'PNG', 0, 0, width, height)
+    pdf.save(`${selected?.name || 'prospect'}.pdf`)
+  }
+
+  const deleteProspect = async () => {
+    if (!selected) return
+    const id = selected.id
+    const user = selected.user
+
     try {
-      const [contactsSnap, leadsSnap, notesSnap] = await Promise.all([
-        getDocs(collection(firestore, 'marketing_contacts')),
-        getDocs(collection(firestore, 'marketing_leads')),
-        getDocs(collection(firestore, 'marketing_notes')),
+      await Promise.all([
+        deleteDoc(doc(firestore, 'marketing_contacts', id)),
+        deleteDoc(doc(firestore, 'marketing_leads', id)),
+        deleteDoc(doc(firestore, `marketing_users/${user}/contacts`, id)),
+        deleteDoc(doc(firestore, `marketing_users/${user}/leads`, id)),
+        // Notes are not uniquely linked by ID, so they are skipped for simplicity
       ])
-      setContacts(contactsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })))
-      setLeads(leadsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })))
-      setNotes(notesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })))
+      setSelected(null)
+      fetchProspectData()
     } catch (err) {
-      console.error('Failed to load marketing data:', err)
-    } finally {
-      setLoading(false)
+      console.error('Delete failed:', err)
     }
   }
-
-  const assignLead = async () => {
-    const id = uuidv4()
-    const data = {
-      ...leadData,
-      user: leadData.assignedTo,
-    }
-
-    await Promise.all([
-      setDoc(doc(firestore, 'marketing_leads', id), data),
-      setDoc(doc(firestore, `marketing_users/${leadData.assignedTo}/leads`, id), data),
-    ])
-
-    setLeadData({ name: '', contact: '', interest: '', status: 'cold', notes: '', assignedTo: '' })
-    setShowLeadForm(false)
-    fetchAllData()
-  }
-
-  const assignContact = async () => {
-    const id = uuidv4()
-    const data = {
-      ...contactData,
-      user: contactData.assignedTo,
-      addedAt: Timestamp.now(),
-    }
-
-    await Promise.all([
-      setDoc(doc(firestore, 'marketing_contacts', id), data),
-      setDoc(doc(firestore, `marketing_users/${contactData.assignedTo}/contacts`, id), data),
-    ])
-
-    setContactData({ name: '', email: '', phone: '', relationship: '', tags: '', assignedTo: '' })
-    setShowContactForm(false)
-    fetchAllData()
-  }
-
-  const assignNote = async () => {
-    const id = uuidv4()
-    const data = {
-      ...noteData,
-      user: noteData.assignedTo,
-      createdAt: Timestamp.now(),
-    }
-
-    await Promise.all([
-      setDoc(doc(firestore, 'marketing_notes', id), data),
-      setDoc(doc(firestore, `marketing_users/${noteData.assignedTo}/notes`, id), data),
-    ])
-
-    setNoteData({ title: '', content: '', assignedTo: '' })
-    setShowNoteForm(false)
-    fetchAllData()
-  }
-
-  const Section = ({
-    title,
-    items,
-    path,
-    renderItem,
-    addButton,
-  }: {
-    title: string
-    items: any[]
-    path: string
-    renderItem: (item: any) => JSX.Element
-    addButton?: JSX.Element
-  }) => (
-    <div className="bg-white p-5 rounded shadow">
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-lg font-semibold">{title} ({items.length})</h2>
-        {addButton}
-      </div>
-      {items.slice(0, 5).map(renderItem)}
-      {items.length > 5 && (
-        <button
-          onClick={() => router.push(path)}
-          className="text-sm text-blue-600 mt-2 underline"
-        >
-          View All →
-        </button>
-      )}
-    </div>
-  )
 
   return (
     <div className="max-w-6xl mx-auto px-4 mt-10">
@@ -159,182 +186,135 @@ export default function AdminMarketingOverview() {
         </button>
       </div>
 
-      {loading ? (
-        <p>Loading marketing data...</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Section
-            title="📇 Leads"
-            items={leads}
-            path="/admin/marketing-overview/leads"
-            renderItem={lead => (
-              <div key={lead.id} className="mb-2">
-                <p className="font-medium">{lead.name} — {lead.status}</p>
-                <p className="text-sm text-gray-600">{lead.interest}</p>
-              </div>
-            )}
-            addButton={
-              <button
-                onClick={() => setShowLeadForm(true)}
-                className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
-              >
-                + Assign Lead
-              </button>
-            }
-          />
-
-          <Section
-            title="📒 Contacts"
-            items={contacts}
-            path="/admin/marketing-overview/contacts"
-            renderItem={contact => (
-              <div key={contact.id} className="mb-2">
-                <p className="font-medium">{contact.name}</p>
-                <p className="text-sm text-gray-600">{contact.tags}</p>
-              </div>
-            )}
-            addButton={
-              <button
-                onClick={() => setShowContactForm(true)}
-                className="bg-green-600 text-white px-3 py-1 rounded text-sm"
-              >
-                + Assign Contact
-              </button>
-            }
-          />
-
-          <Section
-            title="💡 Notes"
-            items={notes}
-            path="/admin/marketing-overview/notes"
-            renderItem={note => (
-              <div key={note.id} className="mb-2">
-                <p className="font-medium">{note.title}</p>
-                <p className="text-sm text-gray-600 truncate">{note.content}</p>
-              </div>
-            )}
-            addButton={
-              <button
-                onClick={() => setShowNoteForm(true)}
-                className="bg-yellow-500 text-white px-3 py-1 rounded text-sm"
-              >
-                + Assign Note
-              </button>
-            }
-          />
-        </div>
-      )}
-
-      {/* MODALS */}
-      {showLeadForm && (
-        <AssignModal
-          title="Assign New Lead"
-          fields={leadData}
-          setFields={setLeadData}
-          onSave={assignLead}
-          onCancel={() => setShowLeadForm(false)}
-          inputs={[
-            { key: 'name', label: 'Name' },
-            { key: 'contact', label: 'Contact' },
-            { key: 'interest', label: 'Interest' },
-            { key: 'status', label: 'Status', type: 'select', options: ['cold', 'warm', 'hot'] },
-            { key: 'notes', label: 'Notes' },
-            { key: 'assignedTo', label: 'Marketer Email' },
-          ]}
-        />
-      )}
-
-      {showContactForm && (
-        <AssignModal
-          title="Assign New Contact"
-          fields={contactData}
-          setFields={setContactData}
-          onSave={assignContact}
-          onCancel={() => setShowContactForm(false)}
-          inputs={[
-            { key: 'name', label: 'Name' },
-            { key: 'email', label: 'Email' },
-            { key: 'phone', label: 'Phone' },
-            { key: 'relationship', label: 'Relationship' },
-            { key: 'tags', label: 'Tags' },
-            { key: 'assignedTo', label: 'Marketer Email' },
-          ]}
-        />
-      )}
-
-      {showNoteForm && (
-        <AssignModal
-          title="Assign New Note"
-          fields={noteData}
-          setFields={setNoteData}
-          onSave={assignNote}
-          onCancel={() => setShowNoteForm(false)}
-          inputs={[
-            { key: 'title', label: 'Title' },
-            { key: 'content', label: 'Content' },
-            { key: 'assignedTo', label: 'Marketer Email' },
-          ]}
-        />
-      )}
-    </div>
-  )
-}
-
-function AssignModal({
-  title,
-  fields,
-  setFields,
-  onSave,
-  onCancel,
-  inputs,
-}: {
-  title: string
-  fields: any
-  setFields: (val: any) => void
-  onSave: () => void
-  onCancel: () => void
-  inputs: {
-    key: string
-    label: string
-    type?: 'text' | 'select'
-    options?: string[]
-  }[]
-}) {
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded shadow w-full max-w-md space-y-4">
-        <h2 className="text-lg font-bold">{title}</h2>
-        {inputs.map(input => {
-          if (input.type === 'select') {
-            return (
-              <select
-                key={input.key}
-                className="w-full border px-3 py-2 rounded"
-                value={fields[input.key]}
-                onChange={e => setFields({ ...fields, [input.key]: e.target.value })}
-              >
-                {input.options?.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
-            )
-          }
-          return (
-            <input
-              key={input.key}
-              type="text"
-              placeholder={input.label}
-              className="w-full border px-3 py-2 rounded"
-              value={fields[input.key]}
-              onChange={e => setFields({ ...fields, [input.key]: e.target.value })}
-            />
-          )
-        })}
-        <div className="flex justify-end space-x-2">
-          <button onClick={onCancel} className="text-sm px-3 py-1 rounded border">Cancel</button>
-          <button onClick={onSave} className="bg-blue-600 text-white text-sm px-3 py-1 rounded">Save</button>
-        </div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">
+          Prospective Customers ({prospects.length})
+        </h2>
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded text-sm"
+        >
+          + Assign New Prospect
+        </button>
       </div>
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : prospects.length === 0 ? (
+        <p className="italic text-gray-500">No prospects yet.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {prospects.slice(0, 5).map(p => (
+            <div
+              key={p.id}
+              className="p-5 bg-white border shadow rounded cursor-pointer hover:shadow-md"
+              onClick={() => setSelected(p)}
+            >
+              <h3 className="text-lg font-semibold">{p.name}</h3>
+              <p className="text-sm text-gray-600">
+                {p.email || p.phone || 'No contact info'}
+              </p>
+              {p.interest && <p>📌 Interest: {p.interest}</p>}
+              {p.status && <p>🔥 Status: {p.status}</p>}
+              {p.tags && <p>🏷️ Tags: {p.tags}</p>}
+              {p.notes.length > 0 && (
+                <p className="text-sm mt-1 text-gray-500 italic">
+                  Note: {p.notes[0].slice(0, 60)}...
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal for assigning new prospect */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded shadow max-w-md w-full space-y-3 relative">
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-black"
+            >
+              ✕
+            </button>
+            <h2 className="text-lg font-semibold">Assign New Prospect</h2>
+            {[['name', 'Name'], ['email', 'Email'], ['phone', 'Phone'], ['relationship', 'Relationship'], ['tags', 'Tags'], ['interest', 'Service Interest'], ['note', 'Initial Note'], ['assignedTo', 'Marketer Email']].map(([key, label]) => (
+              <input
+                key={key}
+                type="text"
+                placeholder={label}
+                className="w-full border px-3 py-2 rounded"
+                value={(form as any)[key]}
+                onChange={e => setForm({ ...form, [key]: e.target.value })}
+              />
+            ))}
+            <select
+              className="w-full border px-3 py-2 rounded"
+              value={form.status}
+              onChange={e => setForm({ ...form, status: e.target.value })}
+            >
+              {['cold', 'warm', 'hot', 'customer'].map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-sm px-3 py-1 rounded border"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={assignProspect}
+                className="bg-blue-600 text-white text-sm px-3 py-1 rounded"
+              >
+                Save Prospect
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View full info modal */}
+      {selected && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center">
+          <div ref={cardRef} className="bg-white p-6 rounded shadow max-w-lg w-full space-y-4 relative">
+            <button
+              onClick={() => setSelected(null)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-black"
+            >
+              ✕
+            </button>
+            <h2 className="text-xl font-bold">{selected.name}</h2>
+            <p>📧 {selected.email || '—'}</p>
+            <p>📞 {selected.phone || '—'}</p>
+            <p>🔥 Status: {selected.status || '—'}</p>
+            <p>📌 Interest: {selected.interest || '—'}</p>
+            <p>🤝 Relationship: {selected.relationship || '—'}</p>
+            <p>🏷️ Tags: {selected.tags || '—'}</p>
+            <div>
+              <h3 className="font-semibold mt-4 mb-1">📝 Notes</h3>
+              {selected.notes.length === 0 ? (
+                <p className="text-sm italic text-gray-500">No notes yet.</p>
+              ) : (
+                <ul className="list-disc pl-5 text-sm space-y-1">
+                  {selected.notes.map((n, i) => (
+                    <li key={i}>{n}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="flex justify-end space-x-3 pt-4">
+              <button onClick={downloadPDF} className="text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded">
+                🧾 Download PDF
+              </button>
+              <button onClick={deleteProspect} className="text-sm bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">
+                🗑️ Delete Prospect
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
