@@ -12,9 +12,9 @@ import {
   orderBy,
   serverTimestamp,
 } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { firestore, storage } from '@/utils/firebaseConfig'
+import { firestore } from '@/utils/firebaseConfig'
 import AdminHubLoader from '@/components/AdminHubLoader'
+import { uploadFiles } from '@/utils/uploadthing'
 
 interface Project {
   id: string
@@ -99,7 +99,6 @@ export default function ClientProjectDetails() {
       const newMessages = snap.docs.map(doc => ({ ...(doc.data() as Omit<Message, 'id'>), id: doc.id }))
       setMessages(newMessages)
 
-      // ✅ Only scroll if container is scrollable
       setTimeout(() => {
         const container = scrollRef.current?.parentElement
         if (container && container.scrollHeight > container.clientHeight) {
@@ -114,6 +113,7 @@ export default function ClientProjectDetails() {
   async function handleSendMessage(e: React.FormEvent) {
     e.preventDefault()
     if (!newMessage.trim() && !file && !optionalLink.trim()) return
+
     const msg: any = {
       text: newMessage.trim(),
       sender: project?.client_name || 'Client',
@@ -121,17 +121,22 @@ export default function ClientProjectDetails() {
       timestamp: serverTimestamp(),
     }
 
-    if (file) {
-      const storageRef = ref(storage, `messages/${id}/${Date.now()}_${file.name}`)
-      const snapshot = await uploadBytes(storageRef, file)
-      const url = await getDownloadURL(snapshot.ref)
-      msg.fileUrl = url
-    }
+    try {
+      if (file) {
+        const res = await uploadFiles('fileUploader', { files: [file] })
+        const url = res[0]?.url
+        if (!url) throw new Error('Upload failed')
+        msg.fileUrl = url
+      }
 
-    await addDoc(collection(firestore, 'projects', id as string, 'messages'), msg)
-    setNewMessage('')
-    setOptionalLink('')
-    setFile(null)
+      await addDoc(collection(firestore, 'projects', id as string, 'messages'), msg)
+      setNewMessage('')
+      setOptionalLink('')
+      setFile(null)
+    } catch (err) {
+      console.error('Upload failed:', err)
+      alert('Upload failed: ' + (err as any).message)
+    }
   }
 
   if (loading) return <AdminHubLoader />

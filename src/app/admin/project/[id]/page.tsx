@@ -14,9 +14,9 @@ import {
   getDocs,
   deleteDoc,
 } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { firestore, storage } from '@/utils/firebaseConfig'
+import { firestore } from '@/utils/firebaseConfig'
 import AdminHubLoader from '@/components/AdminHubLoader'
+import { uploadFiles } from '@/utils/uploadthing'
 
 interface Message {
   text: string
@@ -65,14 +65,9 @@ export default function ViewProjectPage() {
 
     const unsub = onSnapshot(q, snap => {
       setMessages(snap.docs.map(doc => doc.data() as Message))
-
-      // ✅ Only scroll if container is overflowing
       setTimeout(() => {
-        const container = scrollRef.current?.parentElement
-        if (container && container.scrollHeight > container.clientHeight) {
-          scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
-        }
-      }, 2000)
+        scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 1000)
     })
 
     return () => unsub()
@@ -89,16 +84,24 @@ export default function ViewProjectPage() {
       timestamp: serverTimestamp(),
     }
 
-    if (file) {
-      const storageRef = ref(storage, `messages/${id}/${Date.now()}_${file.name}`)
-      const snapshot = await uploadBytes(storageRef, file)
-      msg.fileUrl = await getDownloadURL(snapshot.ref)
-    }
+    try {
+      if (file) {
+        console.log('📤 Uploading:', file.name)
+        const res = await uploadFiles('fileUploader', { files: [file] })
+        const url = res[0]?.url
+        if (!url) throw new Error('Upload failed')
+        msg.fileUrl = url
+        console.log('✅ Uploaded:', url)
+      }
 
-    await addDoc(collection(firestore, 'projects', id, 'messages'), msg)
-    setNewMessage('')
-    setOptionalLink('')
-    setFile(null)
+      await addDoc(collection(firestore, 'projects', id, 'messages'), msg)
+      setNewMessage('')
+      setOptionalLink('')
+      setFile(null)
+    } catch (err) {
+      console.error('❌ Upload failed:', err)
+      alert('Upload failed: ' + (err as any).message)
+    }
   }
 
   async function handleDeleteAllMessages() {
@@ -179,7 +182,13 @@ export default function ViewProjectPage() {
           <input
             type="file"
             accept="image/*,application/pdf"
-            onChange={e => setFile(e.target.files?.[0] || null)}
+            onChange={e => {
+              const f = e.target.files?.[0]
+              if (f) {
+                console.log('📂 File selected:', f.name)
+                setFile(f)
+              }
+            }}
             className="block text-sm text-gray-500"
           />
           <input
@@ -238,7 +247,6 @@ export default function ViewProjectPage() {
         ← Back to Projects
       </button>
 
-
       <div className="space-y-3 text-sm">
         <Read label="Client Name" value={project.client_name} />
         <Read label="Client Email" value={project.client_email} />
@@ -253,7 +261,10 @@ export default function ViewProjectPage() {
         <Read label="Examples / Competitors" value={project.examples} />
         <Read label="Mood / Branding" value={project.mood} />
         <Read label="Admin Notes" value={project.admin_notes} />
-        <Read label="Client Admin Panel Access" value={project.admin_panel ? 'Yes' : 'No'} />
+        <Read
+          label="Client Admin Panel Access"
+          value={project.admin_panel ? 'Yes' : 'No'}
+        />
       </div>
     </div>
   )

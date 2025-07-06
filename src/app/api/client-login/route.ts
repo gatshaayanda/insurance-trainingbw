@@ -18,7 +18,9 @@ const CLIENTS: Record<string, string> = {
   'mapurazigeorge@gmail.com': process.env.CLIENT_PASSWORD_MAPURAZIGEORGE_GMAIL_COM!,
   'sportscenterbots@gmail.com': process.env.CLIENT_PASSWORD_SPORTSCENTERBOTS_GMAIL_COM!,
   'kopemichelle18@gmail.com': process.env.CLIENT_PASSWORD_KOPEMICHELLE18_GMAIL_COM!,
-     // Add more emails and env keys here as needed
+   'info@insurancetrainingbw.com': process.env.CLIENT_PASSWORD_INFO_INSURANCETRAININGBW_COM!,
+ 
+  // Add more emails and env keys here as needed
 }
 
 export async function POST(req: Request) {

@@ -121,7 +121,7 @@ export default function ClientLoginPage() {
             <p className="mt-2 italic text-[#4F5F7A]">
               {projects[currentIndex]?.progress_update} <br />
               <span className="text-xs text-[#999]">
-                — {projects[currentIndex]?.industry}
+                — Project from the {projects[currentIndex]?.industry} industry
               </span>
             </p>
           </>
