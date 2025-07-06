@@ -36,7 +36,7 @@ export default function HomePage() {
       keys.current.push(e.key.toLowerCase());
       if (keys.current.length > 5) keys.current.shift();
       if (keys.current.join('') === 'admin') {
-        router.push('/login-secret-login-for-admins97F4B2NXQ');
+        router.push('/login');
       }
     };
 
@@ -48,7 +48,7 @@ export default function HomePage() {
     onTouchStart: () => setTouchStart(Date.now()),
     onTouchEnd: () => {
       if (touchStart && Date.now() - touchStart > 600) {
-        router.push('/login-secret-login-for-admins97F4B2NXQ');
+        router.push('/login');
       }
       setTouchStart(null);
     },
