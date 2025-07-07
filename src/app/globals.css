@@ -1,24 +1,20 @@
-/* src/app/globals.css */
-
-/* 1. Tailwind base import */
 @import "tailwindcss";
 
-/* 2. CSS Variables */
 :root {
-  --background: #FFFDF6; /* Warm Shell */
-  --foreground: #0F264B; /* Deep Navy */
+  --background: #FFFDF6;
+  --foreground: #0F264B;
+
   --background-dark: #0A0A0A;
   --foreground-dark: #F3F4F6;
 
-  --brand-primary: #0F264B; /* Navy */
-  --brand-secondary: #C9A43E; /* Precision Gold */
-  --brand-accent: #D9DCE2; /* Cloud Silver */
+  --brand-primary: #0F264B;
+  --brand-secondary: #C9A43E;
+  --brand-accent: #D9DCE2;
 
   --font-sans: var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
 }
 
-/* 3. Dark Mode */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: var(--background-dark);
@@ -26,7 +22,6 @@
   }
 }
 
-/* 4. Reset & Base Styles */
 body {
   margin: 0;
   padding: 0;
@@ -38,7 +33,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* 5. Containers */
 .container {
   max-width: 1280px;
   margin: 0 auto;
@@ -51,7 +45,6 @@ body {
   .container { padding: 0 0.75rem; }
 }
 
-/* 6. Typography */
 a {
   color: var(--brand-secondary);
   text-decoration: none;
@@ -68,7 +61,6 @@ h1,h2,h3,h4,h5,h6 {
   margin-top: 1rem;
 }
 
-/* 7. Buttons */
 button {
   font-family: var(--font-sans);
   cursor: pointer;
@@ -85,7 +77,6 @@ button:hover {
   color: var(--foreground);
 }
 
-/* 8. Form Elements */
 input, textarea, select {
   font-family: var(--font-sans);
   border: 1px solid #ccc;
@@ -101,12 +92,10 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 2px rgba(201,164,62,0.3);
 }
 
-/* 9. Sections */
 section {
   padding: 4rem 0;
 }
 
-/* 10. Footer */
 footer {
   background: var(--brand-accent);
   color: var(--brand-primary);
@@ -114,7 +103,6 @@ footer {
   text-align: center;
 }
 
-/* 11. Utility Classes */
 .btn-navy {
   @apply inline-flex items-center gap-2 bg-[#0F264B] text-white px-4 py-2 rounded shadow hover:bg-[#1a3866] transition;
 }

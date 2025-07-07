@@ -1,8 +1,7 @@
-// src/app/services/metadata.ts
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Services – AdminHub',
+  title: 'Study Options – Insurance Training BW',
   description:
-    'Explore AdminHub’s high-performance service stack: from fast custom builds and AI-assisted dev to secure dashboards and full monthly support.',
+    'Explore our tuition and self-study insurance training tracks. Choose between structured classes or flexible self-paced learning to suit your needs and budget.',
 };

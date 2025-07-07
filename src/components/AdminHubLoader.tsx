@@ -25,7 +25,7 @@ export default function AdminHubLoader() {
     >
       <div className="relative flex items-center justify-center mb-6">
         <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-white/40"></div>
-        <span className="absolute text-4xl font-extrabold text-white tracking-widest">AH</span>
+        <span className="absolute text-4xl font-extrabold text-white tracking-widest">ITBW</span>
       </div>
       <span className="text-white font-medium animate-pulse text-sm tracking-wide">
         Loading your experience...

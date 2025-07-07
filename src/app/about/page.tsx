@@ -2,86 +2,91 @@
 
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/lib/translations';
+import Link from 'next/link';
 
 export default function AboutPage() {
   const { lang } = useLanguage();
 
   return (
     <>
-      <section className="py-20 bg-white text-[#0B1A33]">
-        <div className="container mx-auto text-center space-y-6">
+      {/* HERO */}
+      <section className="py-20 bg-white text-[#0F264B] text-center">
+        <div className="container mx-auto space-y-6">
           <h1 className="text-4xl font-bold">{translations.aboutTitle[lang]}</h1>
-          <p className="text-lg text-[#4F5F7A] max-w-3xl mx-auto">{translations.aboutBody[lang]}</p>
-        </div>
-      </section>
-
-      <section className="py-20 bg-[#F1F1F1] text-[#0B1A33]">
-        <div className="container mx-auto space-y-12">
-          <div>
-            <h2 className="text-2xl font-semibold mb-2">{translations.aboutHowTitle[lang]}</h2>
-            <p className="text-[#4F5F7A]">{translations.aboutHowBody[lang]}</p>
-          </div>
-
-          <div>
-            <h2 className="text-2xl font-semibold mb-2">{translations.aboutLoginTitle[lang]}</h2>
-            <p className="text-[#4F5F7A]">{translations.aboutLoginBody[lang]}</p>
-          </div>
-
-          <div>
-            <h2 className="text-2xl font-semibold mb-2">{translations.aboutLifecycleTitle[lang]}</h2>
-            <ul className="list-disc list-inside text-[#4F5F7A] mt-2 space-y-1">
-              {translations.aboutLifecycleSteps[lang].map((step: string, i: number) => (
-                <li key={i}>{step}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h2 className="text-2xl font-semibold mb-2">{translations.aboutCapitalTitle[lang]}</h2>
-            <p className="text-[#4F5F7A]">{translations.aboutCapitalBody[lang]}</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20 bg-white text-[#0B1A33]">
-        <div className="container mx-auto space-y-12">
-          <div>
-            <h2 className="text-2xl font-semibold mb-2">{translations.aboutEndorseTitle[lang]}</h2>
-            <p className="text-[#4F5F7A]">{translations.aboutEndorseBody[lang]}</p>
-            <ul className="list-disc list-inside text-[#4F5F7A] mt-2 space-y-1">
-              {translations.aboutEndorseList[lang].map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h2 className="text-2xl font-semibold mb-2">{translations.aboutMissionTitle[lang]}</h2>
-            <p className="text-[#4F5F7A]">{translations.aboutMissionBody[lang]}</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20 bg-[#F1F1F1] text-[#0B1A33]">
-        <div className="container mx-auto text-center space-y-6">
-          <h2 className="text-2xl font-bold">{translations.aboutSustainTitle[lang]}</h2>
-          <p className="text-[#4F5F7A] max-w-2xl mx-auto">{translations.aboutSustainBody1[lang]}</p>
-          <p className="text-[#4F5F7A] max-w-2xl mx-auto">{translations.aboutSustainBody2[lang]}</p>
-          <ul className="text-left max-w-xl mx-auto list-disc list-inside text-[#4F5F7A] space-y-2">
-            {translations.aboutSustainList[lang].map((point: string, i: number) => (
-              <li key={i}>{point}</li>
-            ))}
-          </ul>
-          <p className="text-[#4F5F7A] max-w-2xl mx-auto">{translations.aboutSustainBody3[lang]}</p>
-          <a
-            href="https://www.websitecarbon.com/website/adhubmvp-vercel-app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block mt-4 text-blue-600 underline font-semibold"
+          <p className="text-lg">{translations.aboutTagline?.[lang]}</p>
+          <Link
+            href="/enroll"
+            className="inline-block bg-[#3C94E6] hover:bg-[#1C7CD6] text-white font-semibold py-3 px-6 rounded-full"
           >
-            {translations.aboutSustainCta[lang]}
-          </a>
+            {translations.aboutApplyBtn?.[lang]}
+          </Link>
         </div>
+      </section>
+
+      {/* STUDY OPTIONS */}
+      <section className="py-16 bg-[#F9FAFB] text-center text-[#0F264B]">
+        <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
+          <div>
+            <h2 className="text-xl font-bold mb-2">{translations.aboutSelfStudyTitle?.[lang]}</h2>
+            <p>{translations.aboutSelfStudyBody?.[lang]}</p>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold mb-2">{translations.aboutTuitionTitle?.[lang]}</h2>
+            <p>{translations.aboutTuitionBody?.[lang]}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* DETAILS */}
+      <section className="py-20 bg-white text-[#0F264B]">
+        <div className="container mx-auto space-y-12">
+          <div>
+            <h2 className="text-2xl font-bold mb-2">{translations.aboutWhoTitle?.[lang]}</h2>
+            <p>{translations.aboutWhoBody?.[lang]}</p>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold mb-2">{translations.aboutAccredTitle?.[lang]}</h2>
+            <p>
+              {translations.aboutAccredBody?.[lang]}{' '}
+              <a
+                href="https://www.bqa.org.bw"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline"
+              >
+                {translations.aboutAccredLink?.[lang]}
+              </a>
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold mb-2">{translations.aboutImpactTitle?.[lang]}</h2>
+            <ul className="list-disc list-inside space-y-2 text-[#4F5F7A]">
+              {translations.aboutImpactList?.[lang]?.map((point: string, i: number) => (
+                <li key={i}>{point}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold mb-2">{translations.aboutLeaderTitle?.[lang]}</h2>
+            <p>{translations.aboutLeaderBody?.[lang]}</p>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold mb-2">{translations.aboutMissionTitle?.[lang]}</h2>
+            <p>{translations.aboutMissionBody?.[lang]}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* QUOTE */}
+      <section className="py-20 bg-[#F1F1F1] text-center">
+        <blockquote className="max-w-2xl mx-auto text-xl italic text-[#0F264B] border-l-4 border-blue-400 pl-6">
+          "{translations.aboutQuoteText?.[lang]}"
+          <br />— {translations.aboutQuoteAuthor?.[lang]}
+        </blockquote>
       </section>
     </>
   );
